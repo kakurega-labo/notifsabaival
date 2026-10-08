@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ロック画面de通知捌いばる</title>
+    <meta charset="utf-8">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="理不尽な業務通知を素早く処理！バッテリー切れまで生き残れ。">
+    <meta property="og:title" content="ロック画面de通知捌いばる">
+    <meta property="og:description" content="通知を捌いて充電を守れ！">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="phone-frame">
+        <div class="relative w-full h-full flex flex-col z-10 p-4">
+            
+            <div class="flex justify-between items-center text-white text-xs font-semibold px-2">
+                <div class="flex items-center gap-2">
+                    <span>mobile<span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-signal text-[10px]"></i>
+                    <span id="battery-text">100%</span>
+                    <i id="battery-icon" class="fa-solid fa-battery-full text-lg"></i>
+                </div>
+            </div>
+
+            <div class="flex flex-col items-center mt-12 text-white">
+                <div id="date-display" class="text-lg font-medium mb-1 drop-shadow-md">1月1日 (月)</div>
+                <div id="time-display" class="text-[5.5rem] leading-none clock-font drop-shadow-lg tracking-tight">
+                    0:00
+                </div>
+            </div>
+
+            <div id="notification-container" class="flex-1 w-full mt-6 flex flex-col gap-3 overflow-y-auto no-scrollbar pb-32">
+                <!-- JavaScriptでここに通知が生成されます -->
+            </div>
+
+            <div id="title-screen" class="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-50 text-white p-6 text-center">
+                <h1 class="text-3xl font-bold mb-8 drop-shadow-md">ロック画面de<br>通知捌いばる</h1>
+                <button onclick="startGame()" class="mb-4 px-8 py-3 bg-[#fc9500] hover:bg-[#ffb831] rounded-full font-bold text-lg transition-colors w-full max-w-[200px]">
+                    スタート
+                </button>
+                <button onclick="showHowToPlay()" class="px-6 py-2 bg-gray-600 hover:bg-gray-500 rounded-full font-bold transition-colors w-full max-w-[200px]">
+                    遊び方
+                </button>
+            </div>
+
+            <div id="how-to-play-screen" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/90 backdrop-blur-md z-50 text-white p-6">
+                <h2 class="text-2xl font-bold mb-4">遊び方</h2>
+                <div class="text-left text-sm space-y-3 mb-4 overflow-y-auto max-h-[50vh] p-3 bg-white/10 w-full rounded-xl custom-scrollbar">
+                    <p><strong>画面上のステータスアイコン：</strong><br>
+                       <i class="fa-solid fa-battery-full"></i> <strong>バッテリー：</strong>0%になると電源切れで即ゲームオーバー
+                    </p>
+                    <p><strong>基本操作：</strong><br>数秒ごとに届く通知をタップして開き、対応アクションを選択して素早く処理します。</p>
+                　  <p><strong>アクション選択：</strong><br>
+                     通知を処理するごとにバッテリー <i class="fa-solid fa-battery-full"></i> を消費します。<br>
+                     ※「ヘルスケア」通知など一部のアクションでバッテリーを充電できます。
+                  </p>
+                  <p><strong>クリア条件：</strong><br>通知を<strong>10件以上</strong>処理し、画面上の通知を<strong>0件</strong>にすることです。</p>
+                  <p><strong>ゲームオーバー：</strong><br>
+                     1. <strong>電源切れ：</strong>バッテリー残量が0%になる<br>
+                     2. <strong>処理落ち：</strong>通知が画面に50件溜まる
+                    </p>
+                </div>
+
+                <div class="flex items-center justify-between w-full p-3 bg-white/10 rounded-xl mb-6">
+                    <span class="text-sm font-bold">壁紙を表示</span>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="wallpaper-toggle" class="sr-only peer" checked onchange="toggleWallpaper()">
+                        <div class="w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                    </label>
+                </div>
+
+                <button onclick="hideHowToPlay()" class="px-6 py-2 bg-gray-600 hover:bg-gray-500 rounded-full font-bold transition-colors">
+                    閉じる
+                </button>
+            </div>
+
+            <div id="clear-screen" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-40 text-white p-6 text-center">
+                <i id="end-icon" class="fa-solid fa-battery-empty text-6xl mb-4 text-red-500"></i>
+                <h2 id="end-title" class="text-3xl font-bold mb-2">電源切れ</h2>
+                <p id="end-desc" class="text-gray-200 text-sm">バッテリーが切れ、音信不通になりました...</p>
+                <div class="mt-8 flex flex-col gap-3 w-full items-center">
+                    <button onclick="startGame()" class="px-6 py-3 bg-[#fc9500] hover:bg-[#ffb831] rounded-full font-bold transition-colors w-full max-w-[200px]">
+                        もう一度
+                    </button>
+                    <button onclick="backToTitle()" class="text-sm text-gray-400 hover:text-white underline transition-colors">
+                        タイトル画面に戻る
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="toast" class="toast">アクションを実行しました</div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
