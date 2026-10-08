@@ -1,6 +1,6 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #000000; /* スマホ以外背景色 */
+    background-color: #000000; /* スマホ時の背景色 */
     margin: 0;
     display: flex;
     justify-content: center;
@@ -29,6 +29,10 @@ body {
 
 /* PC画面で見る時のための角丸とボーダー（スマホ実機の場合はフルスクリーン） */
 @media (min-width: 450px) {
+    body {
+        background-color: #767676; /* スマホ以外背景色 */
+    }
+        
     .phone-frame {
         max-width: 400px;
         max-height: 850px;
