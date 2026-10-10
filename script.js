@@ -15,11 +15,24 @@ let comboCount = 0; // 連続コンボ数
 let lastClearedTime = 0; // 直近で通知を処理した時刻
 let comboTimerId = null; // コンボ表示（mobile位置）タイマー管理用
 
+// 【追加】制限時間（タイムリミット）用状態
+let timeLimitTimerId = null;
+let maxTimeLimit = 50; // 秒数
+let remainingTime = 50; // 秒数
+
 // ランキング用状態
 let currentRankingDifficulty = "10"; // モーダルで表示中の難易度タグ
 let lastGameResult = null; // スコア送信用の最終リザルト情報
 let isScoreSubmitted = false; // 今回のスコアが送信済みかどうかのフラグ
 let toastTimeoutId = null; // トースト通知のタイマー管理用
+
+// 難易度ごとの制限時間マッピング（秒）
+const DIFFICULTY_TIME_LIMITS = {
+    5: 35,   // パート
+    10: 55,  // レギュラー
+    20: 90,  // フルタイム
+    30: 120  // オーバータイム
+};
 
 // -----------------------
 // 画面制御ロジック
@@ -54,6 +67,7 @@ function hideHowToPlay() {
 }
 
 function backToTitle() {
+    stopTimeLimitTimer();
     document.getElementById('clear-screen').classList.add('hidden');
     document.getElementById('title-screen').classList.remove('hidden');
     updateCarrierDisplay();
@@ -169,7 +183,7 @@ function getDifficultyText(count) {
 }
 
 // -----------------------
-// ランダム通知生成ロジック（ダメージ0を多数拡充）
+// ランダム通知生成ロジック
 // -----------------------
 function createRandomNotification() {
     const id = notificationIdCounter++;
@@ -412,6 +426,7 @@ function init() {
         isClockStarted = true;
     }
 
+    startTimeLimitTimer();
     startNotificationSpawner();
 }
 
@@ -420,15 +435,61 @@ function startNotificationSpawner() {
     spawnIntervalId = setInterval(() => {
         if (currentBattery <= 0) return;
 
-        if (activeNotifications.length >= 50) {
-            showGameOverScreen('overflow');
-            return;
-        }
-
         const newNotif = createRandomNotification();
         activeNotifications.unshift(newNotif); // 先頭に追加
         renderNotifications();
     }, 2500);
+}
+
+// 【追加・修正】制限時間タイマーの制御
+function startTimeLimitTimer() {
+    stopTimeLimitTimer();
+    maxTimeLimit = DIFFICULTY_TIME_LIMITS[targetClearCount] || 55;
+    remainingTime = maxTimeLimit;
+
+    const container = document.getElementById('time-limit-container');
+    if (container) container.classList.remove('hidden');
+
+    updateTimeLimitDisplay();
+
+    timeLimitIntervalId = setInterval(() => {
+        if (currentBattery <= 0) return;
+
+        remainingTime--;
+        updateTimeLimitDisplay();
+
+        if (remainingTime <= 0) {
+            stopTimeLimitTimer();
+            if (spawnIntervalId) clearInterval(spawnIntervalId);
+            showGameOverScreen('timeup');
+        }
+    }, 1000);
+}
+
+function stopTimeLimitTimer() {
+    if (timeLimitIntervalId) {
+        clearInterval(timeLimitIntervalId);
+        timeLimitIntervalId = null;
+    }
+    const container = document.getElementById('time-limit-container');
+    if (container) container.classList.add('hidden');
+}
+
+function updateTimeLimitDisplay() {
+    const textEl = document.getElementById('time-limit-text');
+    const barEl = document.getElementById('time-limit-bar');
+    if (!textEl || !barEl) return;
+
+    textEl.textContent = `${remainingTime}s`;
+    const percentage = Math.max(0, Math.min(100, (remainingTime / maxTimeLimit) * 100));
+    barEl.style.width = `${percentage}%`;
+
+    // 残り時間が20%以下になったら警告色（赤に点滅など）にする
+    if (percentage <= 25) {
+        barEl.className = 'bg-red-500 h-full transition-all duration-300 animate-pulse';
+    } else {
+        barEl.className = 'bg-amber-400 h-full transition-all duration-300';
+    }
 }
 
 function setRandomDate() {
@@ -598,7 +659,7 @@ function renderNotifications() {
         card.appendChild(mainContent);
         card.appendChild(actionsArea);
         
-        // スワイプイベント登録（直感処理）
+        // スワイプイベント登録
         attachSwipeEvents(card, notif);
 
         container.insertBefore(card, container.firstChild);
@@ -606,7 +667,7 @@ function renderNotifications() {
 }
 
 // -----------------------
-// スワイプジェスチャー処理（直感アクション追加）
+// スワイプジェスチャー処理
 // -----------------------
 function attachSwipeEvents(card, notif) {
     let startX = 0;
@@ -625,10 +686,8 @@ function attachSwipeEvents(card, notif) {
         const x = e.touches ? e.touches[0].clientX : e.clientX;
         currentX = x - startX;
 
-        // 水平移動のみ（傾けない）
         card.style.transform = `translateX(${currentX}px)`;
 
-        // 方向別の発光フィードバック
         if (currentX > 30) {
             card.style.backgroundColor = 'rgba(239, 68, 68, 0.35)'; // 右＝反抗（赤）
         } else if (currentX < -30) {
@@ -647,13 +706,11 @@ function attachSwipeEvents(card, notif) {
 
         const threshold = 70; // スワイプ確定しきい値(px)
         if (currentX < -threshold) {
-            // 左スワイプ：1番目の選択肢（模範）
             if (notif.actions && notif.actions[0]) {
                 const act = notif.actions[0];
                 handleAction(notif.id, act.msg, act.damage, act.type, 'left');
             }
         } else if (currentX > threshold) {
-            // 右スワイプ：2番目の選択肢（反抗）
             if (notif.actions && notif.actions[1]) {
                 const act = notif.actions[1];
                 handleAction(notif.id, act.msg, act.damage, act.type, 'right');
@@ -693,7 +750,6 @@ function handleAction(id, message, damage = 10, actionType = 'slave', direction 
     const card = document.getElementById(`notif-${id}`);
     if (!card) return;
 
-    // コンボ判定（3秒以内 かつ ダメージ0以下でコンボ加算。ダメージを受けるとコンボ途切れる）
     const now = Date.now();
     const timeDiff = now - lastClearedTime;
 
@@ -704,45 +760,36 @@ function handleAction(id, message, damage = 10, actionType = 'slave', direction 
             comboCount = 1;
         }
     } else {
-        // ダメージを食らったらコンボ中断！
         comboCount = 0;
     }
     lastClearedTime = now;
 
-    // 通常のダメージ適用
     currentBattery = Math.min(100, Math.max(0, currentBattery - damage));
 
-    // 手応え演出1：大きなダメージ（20以上）を受けたときに画面を揺らす
     const phoneFrame = document.querySelector('.phone-frame');
     if (damage >= 20) {
         phoneFrame.classList.add('shake');
         setTimeout(() => phoneFrame.classList.remove('shake'), 400);
     }
 
-    // 10コンボ毎に回復ボーナス処理（10, 20, 30...）
     let displayMessage = message;
     if (comboCount > 0 && comboCount % 10 === 0) {
-        const bonusBattery = 15; // 10コンボ毎に15%固定回復
+        const bonusBattery = 15;
         currentBattery = Math.min(100, currentBattery + bonusBattery);
         
-        // バッテリーアイコン直下に%数値を表示 & 発光演出
         showBatteryBonusText(bonusBattery);
 
         phoneFrame.classList.add('battery-pulse');
         setTimeout(() => phoneFrame.classList.remove('battery-pulse'), 600);
     } else if (damage < 0) {
-        // エナドリ等での回復時も発光
         showBatteryBonusText(Math.abs(damage));
         phoneFrame.classList.add('battery-pulse');
         setTimeout(() => phoneFrame.classList.remove('battery-pulse'), 600);
     }
 
-    // キャリア位置にコンボ状態を表示
     updateCarrierDisplay(comboCount);
-
     updateBatteryDisplay(currentBattery);
 
-    // アニメーション開始と同時に内部データとカウントを更新
     activeNotifications = activeNotifications.filter(n => n.id !== id);
     clearedNotificationsCount++;
 
@@ -756,8 +803,12 @@ function handleAction(id, message, damage = 10, actionType = 'slave', direction 
     setTimeout(() => {
         card.remove();
         if (currentBattery <= 0) {
+            stopTimeLimitTimer();
+            if (spawnIntervalId) clearInterval(spawnIntervalId);
             showGameOverScreen('battery');
-        } else if (clearedNotificationsCount >= targetClearCount && activeNotifications.length === 0) {
+        } else if (clearedNotificationsCount >= targetClearCount) {
+            stopTimeLimitTimer();
+            if (spawnIntervalId) clearInterval(spawnIntervalId);
             showClearScreen();
         }
     }, 350);
@@ -805,7 +856,6 @@ function prepareResultData(isClear = true) {
         rankingInput.value = savedUserName || "";
     }
 
-    // パート（5件）の場合はランキング登録エリアを非表示にする
     const submitContainer = document.getElementById('ranking-submit-container');
     if (submitContainer) {
         if (targetClearCount === 5) {
@@ -869,7 +919,6 @@ function updateDummyWidgets(isClear) {
         score = Math.floor(score / 2);
     }
 
-    // 自己ベスト更新判定（ローカルストレージ保持）
     const storageKey = `notif_survival_best_score_${targetClearCount}`;
     const previousBest = parseInt(localStorage.getItem(storageKey) || "0", 10);
     
@@ -897,9 +946,9 @@ function updateDummyWidgets(isClear) {
 
 function showGameOverScreen(reason = 'battery') {
     if (spawnIntervalId) clearInterval(spawnIntervalId);
+    stopTimeLimitTimer();
     hideToastImmediately();
 
-    // ゲーム終了時点の時刻を設定
     const now = new Date();
     const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     const emailTimeEl = document.getElementById('result-email-time');
@@ -913,8 +962,8 @@ function showGameOverScreen(reason = 'battery') {
 
     if (reason === 'battery') {
         title.textContent = '電源切れ';
-    } else if (reason === 'overflow') {
-        title.textContent = '処理落ち';
+    } else if (reason === 'timeup') {
+        title.textContent = 'タイムアップ';
     }
 
     clearScreen.classList.remove('hidden');
@@ -922,9 +971,9 @@ function showGameOverScreen(reason = 'battery') {
 
 function showClearScreen() {
     if (spawnIntervalId) clearInterval(spawnIntervalId);
+    stopTimeLimitTimer();
     hideToastImmediately();
 
-    // ゲーム終了時点の時刻を設定
     const now = new Date();
     const timeStr = `${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
     const emailTimeEl = document.getElementById('result-email-time');
@@ -944,7 +993,6 @@ function openRankingModal(diff) {
     if (diff) {
         currentRankingDifficulty = diff;
     } else {
-        // パートの場合はデフォルトをレギュラー（10）にする
         currentRankingDifficulty = (targetClearCount === 5) ? "10" : targetClearCount.toString();
     }
     
@@ -999,7 +1047,6 @@ async function fetchRanking(diff) {
             const clearedCount = item.clearedCount ?? item.cleared_count ?? 0;
             const clearedStr = `${clearedCount}件`;
             
-            // スコア算出（クリア件数 × 残バッテリー × 100 / 秒数）
             const endBattery = item.endBattery ?? 0;
             const clearTimeSec = item.clearTimeSeconds || 1;
             const isClear = item.isClear ?? item.is_clear ?? 1;
@@ -1103,7 +1150,6 @@ async function submitRankingScore() {
         const mainInput = document.getElementById('username-input');
         if (mainInput) mainInput.value = name;
 
-        // 設定画面側の表示も更新
         const settingsDisplay = document.getElementById('settings-username-display');
         if (settingsDisplay) settingsDisplay.textContent = name;
 
