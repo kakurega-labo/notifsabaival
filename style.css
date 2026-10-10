@@ -1,6 +1,6 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    background-color: #000000; /* スマホ時の背景色 */
+    background-color: #000000;
     margin: 0;
     display: flex;
     justify-content: center;
@@ -8,10 +8,9 @@ body {
     min-height: 100vh;
     min-height: 100dvh;
     overflow: hidden;
-    user-select: none; /* テキスト選択無効化 */
+    user-select: none;
 }
 
-/* スマホのフレーム（デスクトッププレビュー用） */
 .phone-frame {
     width: 100%;
     height: 100vh;
@@ -27,10 +26,52 @@ body {
     background-color: #767676;
 }
 
-/* PC画面で見る時のための角丸とボーダー（スマホ実機の場合はフルスクリーン） */
+/* 画面シェイク（大きなダメージ・ピンチ時） */
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-6px); }
+    40%, 80% { transform: translateX(6px); }
+}
+.phone-frame.shake {
+    animation: shake 0.4s ease-in-out;
+}
+
+/* 回復時のグロー（発光）演出 */
+@keyframes pulse-green {
+    0% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(74, 222, 128, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0); }
+}
+.battery-pulse {
+    animation: pulse-green 0.6s ease-out;
+}
+
+/* バッテリーアイコン用のアニメーション演出 */
+@keyframes battery-icon-glow {
+    0% { transform: scale(1); filter: drop-shadow(0 0 0px #4ade80); }
+    50% { transform: scale(1.3); filter: drop-shadow(0 0 8px #4ade80); }
+    100% { transform: scale(1); filter: drop-shadow(0 0 0px #4ade80); }
+}
+.battery-pulse #battery-icon {
+    animation: battery-icon-glow 0.6s ease-out;
+    color: #4ade80 !important;
+}
+
+/* キャリア名位置のコンボ強調スタイル */
+.combo-active {
+    color: #fbbf24 !important;
+    text-shadow: 0 0 8px rgba(251, 191, 36, 0.8);
+    font-weight: 800 !important;
+}
+
+.phone-frame.clear-bg {
+    background: url('clear-kabegami.jpg') no-repeat center center / cover !important;
+    background-color: #0f172a !important;
+}
+
 @media (min-width: 450px) {
     body {
-        background-color: #767676; /* スマホ以外背景色 */
+        background-color: #767676;
     }
         
     .phone-frame {
@@ -41,7 +82,6 @@ body {
     }
 }
 
-/* ガラスモーフィズム（通知カード） */
 .glass-card {
     background: rgba(255, 255, 255, 0.15);
     backdrop-filter: blur(12px);
@@ -52,14 +92,19 @@ body {
     cursor: pointer;
     position: relative;
     z-index: 10;
-    overflow: hidden; /* 消去時の高さ縮小を滑らかにするため追加 */
+    overflow: hidden;
+    touch-action: pan-y;
+    will-change: transform;
+}
+
+.glass-card.swiping {
+    transition: none !important;
 }
 
 .glass-card:active {
     transform: scale(0.98);
 }
 
-/* 通知のアクション展開エリア */
 .actions-area {
     max-height: 0;
     opacity: 0;
@@ -75,22 +120,20 @@ body {
     border-top: 1px solid rgba(255,255,255,0.2);
 }
 
-/* 通知が消えるアニメーション (横滑り＆高さ縮小でスムーズな押し上げ) */
 .slide-out-right {
-    animation: slideOut 0.4s forwards cubic-bezier(0.4, 0, 0.2, 1);
+    animation: slideOutRight 0.35s forwards cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
 }
 
-@keyframes slideOut {
+@keyframes slideOutRight {
     0% {
         transform: translateX(0);
         opacity: 1;
         max-height: 200px;
         margin-bottom: 0.75rem;
-        padding-top: 0.75rem;
-        padding-bottom: 0.75rem;
     }
-    40% {
-        transform: translateX(120%);
+    50% {
+        transform: translateX(110%);
         opacity: 0;
         max-height: 200px;
         margin-bottom: 0.75rem;
@@ -98,7 +141,7 @@ body {
         padding-bottom: 0.75rem;
     }
     100% {
-        transform: translateX(120%);
+        transform: translateX(110%);
         opacity: 0;
         max-height: 0;
         margin-bottom: 0;
@@ -108,7 +151,37 @@ body {
     }
 }
 
-/* トースト通知 */
+.slide-out-left {
+    animation: slideOutLeft 0.35s forwards cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+}
+
+@keyframes slideOutLeft {
+    0% {
+        transform: translateX(0);
+        opacity: 1;
+        max-height: 200px;
+        margin-bottom: 0.75rem;
+    }
+    50% {
+        transform: translateX(-110%);
+        opacity: 0;
+        max-height: 200px;
+        margin-bottom: 0.75rem;
+        padding-top: 0.75rem;
+        padding-bottom: 0.75rem;
+    }
+    100% {
+        transform: translateX(-110%);
+        opacity: 0;
+        max-height: 0;
+        margin-bottom: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        border-width: 0;
+    }
+}
+
 .toast {
     position: absolute;
     bottom: -50px;
@@ -132,7 +205,6 @@ body {
     opacity: 1;
 }
 
-/* スクロールバー非表示 */
 .no-scrollbar::-webkit-scrollbar {
     display: none;
 }
@@ -146,22 +218,43 @@ body {
     font-weight: 200;
 }
 
-/* 遊び方画面用のカスタムスクロールバー */
 .custom-scrollbar::-webkit-scrollbar {
-    width: 4px; /* スクロールバーの細さ */
+    width: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent; /* トラック（背景）は透明 */
+    background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.3); /* 半透明の白色 */
-    border-radius: 10px; /* 丸みを持たせる */
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(255, 255, 255, 0.5); /* ホバー時少し濃くする */
+    background: rgba(255, 255, 255, 0.5);
 }
-/* Firefox用 */
 .custom-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.rank-badge {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 11px;
+}
+.rank-1 { 
+    background-color: #ffd700; color: #000;
+}
+.rank-2 { 
+    background-color: #c0c0c0; color: #000;
+}
+.rank-3 { 
+    background-color: #cd7f32; color: #fff;
+}
+.rank-other { 
+    background-color: rgba(255,255,255,0.1); color: #ccc;
 }
