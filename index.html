@@ -44,138 +44,275 @@
             </div>
 
             <!-- タイトル画面 -->
-            <div id="title-screen" class="absolute inset-0 flex flex-col bg-black/85 backdrop-blur-md z-50 text-white p-6 text-center">
+            <div id="title-screen" class="absolute inset-0 flex flex-col bg-black/80 backdrop-blur-sm z-50 text-white p-6 text-center">
                 <div class="flex-1 flex flex-col items-center justify-center">
-                    <h1 class="text-3xl font-black mb-6 drop-shadow-md leading-tight">ロック画面de<br>通知捌いばる</h1>
-                    
-                    <!-- 難易度選択（タイトル画面に移動） -->
-                    <div class="w-full max-w-[220px] mb-5 bg-white/10 backdrop-blur-md p-3 rounded-2xl border border-white/10 text-left shadow-lg">
-                        <label class="text-[11px] font-bold text-gray-300 block mb-1.5 flex items-center gap-1.5">
-                            <i class="fa-solid fa-layer-group text-amber-400"></i> 通知ノルマ（難易度）
-                        </label>
-                        <select id="difficulty-select" onchange="changeDifficulty()" class="w-full bg-black/70 border border-gray-600 rounded-xl px-2.5 py-2 text-xs text-white focus:outline-none focus:border-amber-400 font-bold">
-                            <option value="5">パート（5件 ※登録不可）</option>
-                            <option value="10" selected>ノーマル（10件）</option>
-                            <option value="20">フルタイム（20件）</option>
-                            <option value="30">ハード（30件）</option>
-                        </select>
-                    </div>
-
-                    <div class="flex flex-col gap-3 w-full max-w-[220px]">
-                        <button onclick="startGame()" class="py-3 bg-[#fc9500] hover:bg-[#ffb831] rounded-2xl font-black text-base text-black transition-all shadow-lg active:scale-95 flex items-center justify-center gap-2">
-                            <i class="fa-solid fa-play"></i> スタート
+                    <h1 class="text-3xl font-bold mb-8 drop-shadow-md">ロック画面de<br>通知捌いばる</h1>
+                    <div class="flex flex-col gap-3 w-full max-w-[200px]">
+                        <button onclick="startGame()" class="px-8 py-3 bg-[#fc9500] hover:bg-[#ffb831] rounded-full font-bold text-lg transition-colors w-full shadow-lg">
+                            スタート
                         </button>
                     </div>
                 </div>
-                
-                <div class="flex flex-col items-center gap-2.5 pb-4 w-full max-w-[220px] mx-auto">
-                    <button onclick="openRankingModal()" class="py-2.5 bg-amber-600/90 hover:bg-amber-500 rounded-2xl font-bold transition-all w-full flex items-center justify-center gap-2 text-xs shadow-md active:scale-95">
+                <div class="flex flex-col items-center gap-2 pb-8 w-full max-w-[200px] mx-auto">
+                    <button onclick="openDifficultyModal()" class="px-6 py-2 bg-purple-600/80 hover:bg-purple-500 rounded-full font-bold transition-colors w-full flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-layer-group"></i> 難易度選択
+                    </button>
+                    <button onclick="openRankingModal()" class="px-6 py-2 bg-amber-600/80 hover:bg-amber-500 rounded-full font-bold transition-colors w-full flex items-center justify-center gap-2">
                         <i class="fa-solid fa-trophy"></i> ランキング
                     </button>
-                    <button onclick="showSettings()" class="py-2.5 bg-gray-800/90 hover:bg-gray-700 border border-white/10 rounded-2xl font-bold transition-all w-full flex items-center justify-center gap-2 text-xs shadow-md active:scale-95">
-                        <i class="fa-solid fa-gear"></i> 設定 / 遊び方
+                    <button onclick="showHowToPlay()" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-full font-bold transition-colors w-full flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-gear"></i> 設定
                     </button>
                 </div>
             </div>
 
-            <!-- 設定画面（スマホの設定アプリ風 UI刷新） -->
-            <div id="settings-screen" class="hidden absolute inset-0 flex flex-col bg-[#000000] z-50 text-white p-4 overflow-hidden">
-                <!-- 設定トップ画面 -->
-                <div id="settings-main-view" class="flex flex-col h-full overflow-y-auto custom-scrollbar">
-                    <div class="flex items-center justify-between pt-2 pb-4 px-1 shrink-0">
-                        <h2 class="text-2xl font-black tracking-tight">設定</h2>
-                        <button onclick="hideSettings()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-sm font-bold text-gray-300 transition-colors">
-                            <i class="fa-solid fa-xmark"></i>
+            <!-- 難易度選択ポップアップ（タイトル画面用） -->
+            <div id="difficulty-modal" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md z-[60] p-6">
+                <div class="bg-zinc-900 border border-white/15 rounded-2xl w-full max-w-[300px] p-5 text-white shadow-2xl">
+                    <h3 class="text-lg font-bold mb-3 text-center flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-layer-group text-purple-400"></i> 難易度選択
+                    </h3>
+                    <p class="text-xs text-gray-400 mb-4 text-center">挑戦する通知ノルマを選択してください</p>
+                    
+                    <div class="flex flex-col gap-2 mb-4">
+                        <button onclick="selectDifficulty('5')" id="diff-btn-5" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-sm">パート (5件)</div>
+                                <div class="text-[10px] text-gray-400">ランキング対象外・初心者向け</div>
+                            </div>
+                            <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-5"></i>
+                        </button>
+                        <button onclick="selectDifficulty('10')" id="diff-btn-10" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-sm">レギュラー (10件)</div>
+                                <div class="text-[10px] text-gray-400">標準的な難易度</div>
+                            </div>
+                            <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-10"></i>
+                        </button>
+                        <button onclick="selectDifficulty('20')" id="diff-btn-20" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-sm">フルタイム (20件)</div>
+                                <div class="text-[10px] text-gray-400">歯ごたえのある長丁場</div>
+                            </div>
+                            <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-20"></i>
+                        </button>
+                        <button onclick="selectDifficulty('30')" id="diff-btn-30" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
+                            <div>
+                                <div class="font-bold text-sm">オーバータイム (30件)</div>
+                                <div class="text-[10px] text-gray-400">極限の耐久タスク</div>
+                            </div>
+                            <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-30"></i>
                         </button>
                     </div>
 
-                    <div class="space-y-4 pb-12">
-                        <!-- ユーザー名カードグループ -->
-                        <div class="bg-[#1c1c1e] rounded-2xl overflow-hidden border border-white/5">
-                            <div onclick="openSettingDetail('username')" class="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-lg bg-blue-500 flex items-center justify-center text-white text-xs">
-                                        <i class="fa-solid fa-user"></i>
-                                    </div>
-                                    <div>
-                                        <div class="text-sm font-semibold">ユーザー名</div>
-                                        <div id="settings-username-sub" class="text-[11px] text-gray-400">未設定</div>
-                                    </div>
+                    <button onclick="closeDifficultyModal()" class="w-full py-2.5 bg-gray-700 hover:bg-gray-600 rounded-xl font-bold text-xs transition-colors">
+                        決定
+                    </button>
+                </div>
+            </div>
+
+            <!-- 設定画面（iOS設定アプリ風メイン画面） -->
+            <div id="how-to-play-screen" class="hidden absolute inset-0 flex flex-col bg-black z-50 text-white p-4">
+                <div class="flex justify-between items-center mb-4 mt-2 px-1">
+                    <h2 class="text-2xl font-bold">設定</h2>
+                    <button onclick="hideHowToPlay()" class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-gray-300 hover:text-white transition-colors">
+                        <i class="fa-solid fa-xmark text-sm"></i>
+                    </button>
+                </div>
+                
+                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pb-6 pr-1">
+                    
+                    <!-- グループ1: ユーザー名 -->
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10">
+                        <div onclick="openSettingsSubScreen('username-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm shadow">
+                                    <i class="fa-solid fa-user"></i>
                                 </div>
-                                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+                                <div class="text-left">
+                                    <div class="text-sm font-semibold">ユーザー名</div>
+                                    <div id="settings-username-display" class="text-xs text-gray-400">未設定</div>
+                                </div>
                             </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-500"></i>
+                        </div>
+                    </div>
+
+                    <!-- グループ2: 各種ヘルプ・システム -->
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 divide-y divide-white/5">
+                        <div onclick="openSettingsSubScreen('howto-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm shadow">
+                                    <i class="fa-solid fa-mobile-screen-button"></i>
+                                </div>
+                                <span class="text-sm font-semibold">操作方法</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-500"></i>
                         </div>
 
-                        <!-- 遊び方・ルール説明グループ -->
-                        <div class="bg-[#1c1c1e] rounded-2xl overflow-hidden border border-white/5 divide-y divide-white/5">
-                            <div onclick="openSettingDetail('howto')" class="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-lg bg-orange-500 flex items-center justify-center text-white text-xs">
-                                        <i class="fa-solid fa-mobile-screen"></i>
-                                    </div>
-                                    <div class="text-sm font-semibold">操作方法</div>
+                        <div onclick="openSettingsSubScreen('system-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-green-500 flex items-center justify-center text-white text-sm shadow">
+                                    <i class="fa-solid fa-battery-half"></i>
                                 </div>
-                                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
+                                <span class="text-sm font-semibold">ゲームシステム</span>
                             </div>
-                            <div onclick="openSettingDetail('system')" class="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-lg bg-green-500 flex items-center justify-center text-white text-xs">
-                                        <i class="fa-solid fa-battery-three-quarters"></i>
-                                    </div>
-                                    <div class="text-sm font-semibold">ゲームシステム</div>
-                                </div>
-                                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
-                            </div>
-                            <div onclick="openSettingDetail('types')" class="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-lg bg-purple-500 flex items-center justify-center text-white text-xs">
-                                        <i class="fa-solid fa-bell"></i>
-                                    </div>
-                                    <div class="text-sm font-semibold">通知の種類とダメージ</div>
-                                </div>
-                                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
-                            </div>
-                            <div onclick="openSettingDetail('ranking-rule')" class="p-3.5 flex items-center justify-between hover:bg-white/5 cursor-pointer transition-colors">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-lg bg-amber-500 flex items-center justify-center text-white text-xs">
-                                        <i class="fa-solid fa-award"></i>
-                                    </div>
-                                    <div class="text-sm font-semibold">評価基準（ランキング）</div>
-                                </div>
-                                <i class="fa-solid fa-chevron-right text-gray-500 text-xs"></i>
-                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-500"></i>
                         </div>
 
-                        <!-- システム設定グループ -->
-                        <div class="bg-[#1c1c1e] rounded-2xl overflow-hidden border border-white/5">
-                            <div class="p-3.5 flex items-center justify-between">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-7 h-7 rounded-lg bg-indigo-500 flex items-center justify-center text-white text-xs">
-                                        <i class="fa-solid fa-image"></i>
-                                    </div>
-                                    <div class="text-sm font-semibold">壁紙を表示</div>
+                        <div onclick="openSettingsSubScreen('notif-types-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-purple-600 flex items-center justify-center text-white text-sm shadow">
+                                    <i class="fa-solid fa-bell"></i>
                                 </div>
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" id="wallpaper-toggle" class="sr-only peer" checked onchange="toggleWallpaper()">
-                                    <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
-                                </label>
+                                <span class="text-sm font-semibold">通知の種類とダメージ</span>
                             </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-500"></i>
+                        </div>
+
+                        <div onclick="openSettingsSubScreen('ranking-rule-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-amber-500 flex items-center justify-center text-white text-sm shadow">
+                                    <i class="fa-solid fa-award"></i>
+                                </div>
+                                <span class="text-sm font-semibold">評価基準（ランキング）</span>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-500"></i>
+                        </div>
+                    </div>
+
+                    <!-- グループ3: 壁紙表示設定 -->
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10">
+                        <div class="flex items-center justify-between p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm shadow">
+                                    <i class="fa-solid fa-image"></i>
+                                </div>
+                                <span class="text-sm font-semibold">壁紙を表示</span>
+                            </div>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="wallpaper-toggle" class="sr-only peer" checked onchange="toggleWallpaper()">
+                                <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
+                            </label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 設定サブ画面：ユーザー名設定 -->
+            <div id="settings-sub-username-sub" class="hidden absolute inset-0 flex flex-col bg-black z-[55] text-white p-4">
+                <div class="flex items-center justify-between mb-4 mt-2 px-1">
+                    <button onclick="closeSettingsSubScreen('username-sub')" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm font-semibold">
+                        <i class="fa-solid fa-chevron-left"></i> 設定
+                    </button>
+                    <h3 class="text-base font-bold">ユーザー名設定</h3>
+                    <div class="w-12"></div>
+                </div>
+                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pt-2">
+                    <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 space-y-3">
+                        <h4 class="text-sm font-bold text-white">ユーザー名を設定</h4>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            10文字以内で事前に設定可能です。プレイ中に自分宛ての通知が届くようになり、リザルト画面での変更も可能です。
+                        </p>
+                        <div class="flex gap-2 pt-2">
+                            <input type="text" id="username-input" maxlength="10" placeholder="ユーザー名を入力" class="flex-1 bg-black/60 border border-zinc-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-500">
+                            <button onclick="saveUsername()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold transition-colors shadow">保存</button>
+                        </div>
+                        <p id="username-msg" class="text-xs text-green-400 hidden font-medium">保存しました！</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 設定サブ画面：操作方法 -->
+            <div id="settings-sub-howto-sub" class="hidden absolute inset-0 flex flex-col bg-black z-[55] text-white p-4">
+                <div class="flex items-center justify-between mb-4 mt-2 px-1">
+                    <button onclick="closeSettingsSubScreen('howto-sub')" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm font-semibold">
+                        <i class="fa-solid fa-chevron-left"></i> 設定
+                    </button>
+                    <h3 class="text-base font-bold">操作方法</h3>
+                    <div class="w-12"></div>
+                </div>
+                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pt-2">
+                    <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 text-xs space-y-3 leading-relaxed">
+                        <p><strong class="text-white">基本操作：</strong><br>届く通知をタップして対応を選択するか、<strong>左右にスワイプ（左＝模範対応 / 右＝反抗対応）</strong>で直感的に捌けます！</p>
+                        <p class="border-t border-white/10 pt-2"><strong class="text-white">ステータスアイコン：</strong><br><i class="fa-solid fa-battery-full text-green-400"></i> <strong>バッテリー：</strong>0%になると電源切れで即ゲームオーバーになります。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 設定サブ画面：ゲームシステム -->
+            <div id="settings-sub-system-sub" class="hidden absolute inset-0 flex flex-col bg-black z-[55] text-white p-4">
+                <div class="flex items-center justify-between mb-4 mt-2 px-1">
+                    <button onclick="closeSettingsSubScreen('system-sub')" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm font-semibold">
+                        <i class="fa-solid fa-chevron-left"></i> 設定
+                    </button>
+                    <h3 class="text-base font-bold">ゲームシステム</h3>
+                    <div class="w-12"></div>
+                </div>
+                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pt-2">
+                    <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 text-xs space-y-3 leading-relaxed">
+                        <div>
+                            <strong class="text-white text-sm block mb-1">クリア条件</strong>
+                            <p class="text-gray-300">設定した通知ノルマ以上の通知を処理し、画面上の通知を0件にすることです。</p>
+                        </div>
+                        <div class="border-t border-white/10 pt-2">
+                            <strong class="text-white text-sm block mb-1">ゲームオーバー条件</strong>
+                            <ul class="list-disc list-inside text-gray-300 space-y-1">
+                                <li><strong>電源切れ：</strong>バッテリー残量が0%になる</li>
+                                <li><strong>処理落ち：</strong>通知が画面に50件溜まる</li>
+                            </ul>
+                        </div>
+                        <div class="border-t border-white/10 pt-2">
+                            <strong class="text-white text-sm block mb-1">バッテリー（ライフ）とコンボ</strong>
+                            <p class="text-gray-300">ダメージなしの状態を維持し、3秒以内に連続で通知を処理するとコンボ発生！10コンボ達成ごとにボーナスでバッテリーが回復します。</p>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- 設定詳細サブ画面（iOS設定アプリ風サブビュー） -->
-                <div id="settings-detail-view" class="hidden flex flex-col h-full">
-                    <div class="flex items-center justify-between pt-2 pb-3 px-1 border-b border-white/10 shrink-0">
-                        <button onclick="closeSettingDetail()" class="flex items-center gap-1 text-blue-400 font-bold text-sm hover:opacity-80 transition-opacity">
-                            <i class="fa-solid fa-chevron-left"></i> 設定
-                        </button>
-                        <h3 id="setting-detail-title" class="text-sm font-bold">詳細</h3>
-                        <div class="w-10"></div>
+            <!-- 設定サブ画面：通知の種類とダメージ -->
+            <div id="settings-sub-notif-types-sub" class="hidden absolute inset-0 flex flex-col bg-black z-[55] text-white p-4">
+                <div class="flex items-center justify-between mb-4 mt-2 px-1">
+                    <button onclick="closeSettingsSubScreen('notif-types-sub')" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm font-semibold">
+                        <i class="fa-solid fa-chevron-left"></i> 設定
+                    </button>
+                    <h3 class="text-base font-bold">通知の種類とダメージ</h3>
+                    <div class="w-12"></div>
+                </div>
+                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pt-2">
+                    <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 text-xs space-y-3 leading-relaxed">
+                        <strong class="text-white text-sm block mb-1">通知の種類について</strong>
+                        <p class="text-gray-300">スマホには様々な社内通知や理不尽な連絡が届きます。</p>
+                        <p class="text-blue-400 font-semibold">社内チャット・メール：<span class="text-gray-300 font-normal">休日対応や無茶振りは右スワイプ（反抗）で回避するのが安全なことも。</span></p>
+                        <p class="text-green-400 font-semibold">電話：<span class="text-gray-300 font-normal">上司や社長からの不在着信。誠意を見せるか無視するか。</span></p>
+                        <p class="text-pink-400 font-semibold">ヘルスケア：<span class="text-gray-300 font-normal">長時間作業の警告。エナドリ等でバッテリー回復のチャンス！</span></p>
+                        <p class="text-red-400 font-semibold">システムアラート：<span class="text-gray-300 font-normal">サーバーダウンなどの緊急連絡。</span></p>
+                        <p class="text-gray-400 italic pt-1">※通知ごとのダメージや選択肢を見極めて最適な対応を選びましょう。</p>
                     </div>
+                </div>
+            </div>
 
-                    <div id="setting-detail-content" class="flex-1 overflow-y-auto custom-scrollbar py-4 text-xs text-gray-200 space-y-3 leading-relaxed">
-                        <!-- 動的に挿入 -->
+            <!-- 設定サブ画面：評価基準（ランキング） -->
+            <div id="settings-sub-ranking-rule-sub" class="hidden absolute inset-0 flex flex-col bg-black z-[55] text-white p-4">
+                <div class="flex items-center justify-between mb-4 mt-2 px-1">
+                    <button onclick="closeSettingsSubScreen('ranking-rule-sub')" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm font-semibold">
+                        <i class="fa-solid fa-chevron-left"></i> 設定
+                    </button>
+                    <h3 class="text-base font-bold">評価基準（ランキング）</h3>
+                    <div class="w-12"></div>
+                </div>
+                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pt-2">
+                    <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 text-xs space-y-3 leading-relaxed">
+                        <strong class="text-white text-sm block mb-1">ランキングの決定方法</strong>
+                        <p class="text-gray-300">以下の順番で総合的に評価されます：</p>
+                        <ol class="list-decimal list-inside text-gray-300 space-y-1">
+                            <li>クリアしたかどうか</li>
+                            <li>クリアタイムが早い順</li>
+                            <li>残充電が多い順</li>
+                            <li>捌いた通知数が多い順</li>
+                        </ol>
+                        <p class="text-amber-300 font-semibold pt-2">※「パート (5件)」難易度はランキング対象外となります。ランキング登録にはレギュラー (10件) 以上をプレイしてください。</p>
                     </div>
                 </div>
             </div>
@@ -184,6 +321,7 @@
             <div id="clear-screen" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-black/90 via-slate-950/90 to-black/95 backdrop-blur-lg z-40 text-white p-5 text-center overflow-y-auto no-scrollbar">
                 <div class="w-full max-w-[310px] flex flex-col items-center py-2 my-auto">
                     
+                    <!-- ヘッダーアイコン・演出 -->
                     <div class="relative mb-2 flex items-center justify-center">
                         <div class="absolute inset-0 bg-amber-500/20 blur-xl rounded-full"></div>
                         <div class="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md">
@@ -194,23 +332,27 @@
                     <h2 id="end-title" class="text-2xl font-black mb-1 tracking-tight drop-shadow">電源切れ</h2>
                     <p id="end-desc" class="text-gray-300 text-[11px] mb-4 font-medium px-2 leading-relaxed">バッテリーが切れ、音信不通になりました...</p>
                     
+                    <!-- ウィジェット（スコア表示 8:2比率） -->
                     <div class="flex gap-2 w-full mb-3 items-stretch">
+                        <!-- 最終スコア（幅 約7割） -->
                         <div class="flex-[7] bg-slate-900/80 backdrop-blur-md border border-amber-500/40 rounded-2xl p-3 flex items-center gap-2.5 shadow-lg relative overflow-hidden min-w-0">
                            <i id="widget-weather-icon" class="fa-solid fa-star text-amber-400 text-2xl shrink-0"></i>
                            <div class="flex flex-col text-left min-w-0 flex-1">
                                <div class="flex items-center gap-1.5">
                                    <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">最終スコア</span>
-                                   <span id="new-best-tag" class="hidden text-[9px] text-amber-300 font-bold">★自己ベスト！</span>
+                                   <span id="new-best-tag" class="hidden text-[9px] text-amber-400 font-bold">★自己ベスト更新！</span>
                                </div>
                                <span id="widget-weather-text" class="text-xl font-black text-amber-300 truncate tracking-tight">0 pts</span>
                            </div>
                         </div>
+                        <!-- スコアランク（幅 約3割） -->
                         <div class="flex-[3] bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-2xl p-2 flex flex-col items-center justify-center shadow-lg shrink-0">
                            <span class="text-[8px] text-gray-400 font-bold uppercase">RANK</span>
                            <span id="widget-stock-text" class="text-base font-black text-amber-300 mt-0.5">-</span>
                         </div>
                     </div>
 
+                    <!-- リザルト成績サマリーパネル -->
                     <div id="result-summary-card" class="w-full bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-2xl p-3 mb-3.5 shadow-2xl relative overflow-hidden">
                         <div class="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-lg pointer-events-none"></div>
                         <div class="text-[11px] font-bold text-amber-300 border-b border-white/10 pb-2 mb-2.5 flex items-center justify-center gap-1.5 uppercase tracking-wider">
@@ -239,39 +381,42 @@
                                 <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
                                     <i class="fa-solid fa-layer-group text-[9px] text-purple-400"></i> 難易度
                                 </span>
-                                <span id="res-difficulty" class="font-bold text-purple-300 text-xs mt-0.5 truncate">ノーマル</span>
+                                <span id="res-difficulty" class="font-bold text-purple-300 text-xs mt-0.5 truncate">レギュラー</span>
                             </div>
                         </div>
                     </div>
 
-                    <!-- スコア送信エリア（パート＝5件の場合は非表示に制御） -->
-                    <div id="ranking-submit-area" class="w-full bg-slate-900/80 backdrop-blur-md border border-blue-500/30 p-3 rounded-2xl mb-4 text-left shadow-xl relative overflow-hidden">
-                        <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl pointer-events-none"></div>
-                        
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
-                                <i class="fa-solid fa-cloud-arrow-up text-blue-400"></i> ランキングに登録する
-                            </span>
-                            <span class="text-[9px] text-gray-400 font-mono">最大10文字</span>
-                        </div>
-                        <div class="flex gap-2 items-center">
-                            <div class="relative flex-1">
-                                <i class="fa-solid fa-user absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 text-[10px]"></i>
-                                <input type="text" id="ranking-username-input" maxlength="10" placeholder="名前を入力" class="w-full bg-black/60 border border-blue-500/40 focus:border-blue-400 rounded-xl pl-7 pr-3 py-2 text-xs text-white focus:outline-none transition-all placeholder-gray-500 min-w-0">
+                    <!-- スコア送信エリア（パートの場合は非表示に制御） -->
+                    <div id="ranking-submit-container" class="w-full">
+                        <div id="ranking-submit-area" class="w-full bg-slate-900/80 backdrop-blur-md border border-blue-500/30 p-3 rounded-2xl mb-4 text-left shadow-xl relative overflow-hidden">
+                            <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl pointer-events-none"></div>
+                            
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-cloud-arrow-up text-blue-400"></i> ランキングに登録する
+                                </span>
+                                <span class="text-[9px] text-gray-400 font-mono">最大10文字</span>
                             </div>
-                            <button id="ranking-submit-btn" onclick="submitRankingScore()" class="px-3.5 py-2 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 rounded-xl text-xs font-bold text-white shadow-md transition-all shrink-0 flex items-center justify-center gap-1 whitespace-nowrap border border-blue-400/50">
-                                <i class="fa-solid fa-arrow-up-from-bracket"></i> 登録
-                            </button>
+                            <div class="flex gap-2 items-center">
+                                <div class="relative flex-1">
+                                    <i class="fa-solid fa-user absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 text-[10px]"></i>
+                                    <input type="text" id="ranking-username-input" maxlength="10" placeholder="名前を入力" class="w-full bg-black/60 border border-blue-500/40 focus:border-blue-400 rounded-xl pl-7 pr-3 py-2 text-xs text-white focus:outline-none transition-all placeholder-gray-500 min-w-0">
+                                </div>
+                                <button id="ranking-submit-btn" onclick="submitRankingScore()" class="px-3.5 py-2 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 rounded-xl text-xs font-bold text-white shadow-md transition-all shrink-0 flex items-center justify-center gap-1 whitespace-nowrap border border-blue-400/50">
+                                    <i class="fa-solid fa-arrow-up-from-bracket"></i> 登録
+                                </button>
+                            </div>
+                            <p id="ranking-submit-msg" class="text-[10px] text-blue-300 mt-1.5 hidden text-center font-medium"></p>
                         </div>
-                        <p id="ranking-submit-msg" class="text-[10px] text-blue-300 mt-1.5 hidden text-center font-medium"></p>
                     </div>
 
+                    <!-- アクションボタン群 -->
                     <div class="flex flex-col gap-2 w-full items-center">
                         <button onclick="startGame()" class="w-full py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:brightness-110 text-black font-black rounded-xl text-sm shadow-lg shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 tracking-wide">
                             <i class="fa-solid fa-rotate-right"></i> もう一度遊ぶ
                         </button>
                         <div class="grid grid-cols-2 gap-2 w-full">
-                            <button onclick="openRankingModal()" class="py-2.5 bg-white/5 hover:bg-white/10 border border-amber-400/30 text-amber-300 hover:text-amber-200 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
+                            <button onclick="openRankingModal()" id="result-ranking-btn" class="py-2.5 bg-white/5 hover:bg-white/10 border border-amber-400/30 text-amber-300 hover:text-amber-200 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
                                 <i class="fa-solid fa-trophy"></i> ランキング
                             </button>
                             <button onclick="backToTitle()" class="py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
@@ -294,20 +439,20 @@
                     </button>
                 </div>
 
-                <!-- 難易度切り替えタブ（ハード30件を追加） -->
-                <div class="flex bg-white/10 rounded-lg p-1 mb-3 text-[11px] gap-1">
+                <!-- 難易度切り替えタブ（パート除外、3段階に変更） -->
+                <div class="flex bg-white/10 rounded-lg p-1 mb-3 text-xs">
                     <button onclick="switchRankingTab('10')" id="tab-diff-10" class="flex-1 py-1.5 rounded-md font-bold transition-all bg-amber-500 text-black">
-                        ノーマル
+                        レギュラー (10)
                     </button>
                     <button onclick="switchRankingTab('20')" id="tab-diff-20" class="flex-1 py-1.5 rounded-md font-bold transition-all text-gray-300">
-                        フルタイム
+                        フルタイム (20)
                     </button>
                     <button onclick="switchRankingTab('30')" id="tab-diff-30" class="flex-1 py-1.5 rounded-md font-bold transition-all text-gray-300">
-                        ハード
+                        オーバータイム (30)
                     </button>
                 </div>
-                <div class="text-[10px] text-gray-400 mb-2 text-center">※パート（5件）はランキング対象外です</div>
 
+                <!-- ランキングリストヘッダー -->
                 <div class="grid grid-cols-12 text-[10px] text-gray-400 border-b border-gray-700 pb-1 mb-1 px-2 font-bold">
                     <span class="col-span-2">順位</span>
                     <span class="col-span-4">ユーザー名</span>
@@ -316,14 +461,16 @@
                     <span class="col-span-2 text-right">スコア</span>
                 </div>
 
+                <!-- ランキング一覧リスト -->
                 <div id="ranking-list" class="flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-1 pr-1 text-xs">
                     <div class="text-center py-8 text-gray-400">読み込み中...</div>
                 </div>
 
+                <!-- 自ステータス・未登録時案内領域 -->
                 <div id="user-rank-status" class="mt-2 p-2 bg-white/10 rounded-lg text-xs text-amber-300 text-center border border-amber-500/30 shrink-0 hidden"></div>
 
                 <div class="pt-2 flex justify-center">
-                    <button onclick="closeRankingModal()" class="px-6 py-2 bg-gray-600 hover:bg-gray-500 rounded-full text-xs font-bold transition-colors">
+                    <button onclick="closeRankingModal()" class="px-6 py-2 bg-gray-700 hover:bg-gray-600 rounded-full text-xs font-bold transition-colors">
                         閉じる
                     </button>
                 </div>
