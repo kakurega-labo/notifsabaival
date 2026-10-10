@@ -9,11 +9,11 @@ let notificationIdCounter = 1;
 let isClockStarted = false; // 時計の二重起動防止用
 let clearedNotificationsCount = 0; // 処理した通知の累積カウント
 let savedUserName = ""; // ユーザー名
-let targetClearCount = 10; // クリアに必要な通知処理数（デフォルト10件：ノーマル）
+let targetClearCount = 10; // クリアに必要な通知処理数（デフォルト10件）
 let gameStartTime = 0; // ゲーム開始時刻（勤務時間の計測用）
 let comboCount = 0; // 連続コンボ数
 let lastClearedTime = 0; // 直近で通知を処理した時刻
-let comboTimerId = null; // コンボ表示タイマー管理用
+let comboTimerId = null; // コンボ表示（mobile位置）タイマー管理用
 
 // ランキング用状態
 let currentRankingDifficulty = "10"; // モーダルで表示中の難易度タグ
@@ -32,9 +32,6 @@ function startGame() {
     // リザルト演出のリセット
     document.querySelector('.phone-frame').classList.remove('clear-bg');
     
-    // 難易度（通知ノルマ）の選択状態を確実に反映
-    changeDifficulty();
-    
     // ゲーム状態のリセット
     activeNotifications = [];
     notificationIdCounter = 1;
@@ -48,152 +45,17 @@ function startGame() {
     init(); // ゲームの初期化処理を開始
 }
 
-// 設定画面（スマホの設定アプリ風）の開閉
-function showSettings() {
-    updateSettingsUsernameDisplay();
-    document.getElementById('settings-screen').classList.remove('hidden');
-    document.getElementById('settings-main-view').classList.remove('hidden');
-    document.getElementById('settings-detail-view').classList.add('hidden');
+function showHowToPlay() {
+    document.getElementById('how-to-play-screen').classList.remove('hidden');
 }
 
-function hideSettings() {
-    document.getElementById('settings-screen').classList.add('hidden');
-}
-
-// 設定詳細サブ画面の切り替え
-function openSettingDetail(type) {
-    document.getElementById('settings-main-view').classList.add('hidden');
-    const detailView = document.getElementById('settings-detail-view');
-    detailView.classList.remove('hidden');
-
-    const titleEl = document.getElementById('setting-detail-title');
-    const contentEl = document.getElementById('setting-detail-content');
-    contentEl.innerHTML = '';
-
-    if (type === 'username') {
-        titleEl.textContent = 'ユーザー名設定';
-        contentEl.innerHTML = `
-            <div class="p-3 bg-[#1c1c1e] rounded-2xl border border-white/5 space-y-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 text-blue-400 flex items-center justify-center text-lg">
-                        <i class="fa-solid fa-user"></i>
-                    </div>
-                    <div>
-                        <div class="font-bold text-sm text-white">ユーザー名を設定</div>
-                        <div class="text-[11px] text-gray-400">10文字以内で事前に設定可能です。プレイ中に自分宛ての通知が届くようになり、リザルト画面での変更も可能です。</div>
-                    </div>
-                </div>
-                <div class="flex gap-2 pt-1">
-                    <input type="text" id="username-input" maxlength="10" value="${escapeHtml(savedUserName)}" placeholder="ユーザー名を入力" class="flex-1 bg-black/60 border border-gray-600 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-blue-400">
-                    <button onclick="saveUsernameFromSettings()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 rounded-xl text-xs font-bold transition-colors text-white shadow">保存</button>
-                </div>
-                <p id="username-msg" class="text-[11px] text-green-400 hidden text-center font-medium">保存しました！</p>
-            </div>
-        `;
-    } else if (type === 'howto') {
-        titleEl.textContent = '操作方法';
-        contentEl.innerHTML = `
-            <div class="p-3.5 bg-[#1c1c1e] rounded-2xl border border-white/5 space-y-3">
-                <div class="font-bold text-white text-sm">基本操作</div>
-                <p>届いた通知をタップして対応を選択するか、左右にスワイプして直感的に処理できます。</p>
-                <div class="grid grid-cols-2 gap-2 pt-1">
-                    <div class="p-2.5 bg-blue-950/40 border border-blue-500/30 rounded-xl">
-                        <div class="font-bold text-blue-300 mb-1"><i class="fa-solid fa-arrow-left"></i> 左スワイプ</div>
-                        <div class="text-[11px] text-gray-300">模範対応（安全ですが業務負担が増えることも）</div>
-                    </div>
-                    <div class="p-2.5 bg-red-950/40 border border-red-500/30 rounded-xl">
-                        <div class="font-bold text-red-300 mb-1"><i class="fa-solid fa-arrow-right"></i> 右スワイプ</div>
-                        <div class="text-[11px] text-gray-300">反抗対応（ダメージを受けるリスクあり）</div>
-                    </div>
-                </div>
-            </div>
-        `;
-    } else if (type === 'system') {
-        titleEl.textContent = 'ゲームシステム';
-        contentEl.innerHTML = `
-            <div class="p-3.5 bg-[#1c1c1e] rounded-2xl border border-white/5 space-y-3">
-                <div class="font-bold text-white text-sm">クリア条件</div>
-                <p>設定した通知ノルマ以上の通知を処理し、画面上の通知を0件にすることです。</p>
-                <div class="border-t border-white/10 pt-2 font-bold text-white text-sm">ゲームオーバー条件</div>
-                <ul class="list-disc list-inside space-y-1 text-gray-300 text-[11px]">
-                    <li><strong>電源切れ：</strong>バッテリー残量が0%になる</li>
-                    <li><strong>処理落ち：</strong>画面に通知が50件溜まる</li>
-                </ul>
-                <div class="border-t border-white/10 pt-2 font-bold text-white text-sm">バッテリー（ライフ）とコンボ</div>
-                <p>0%になると電源切れになります。ダメージなしの状態を維持し、3秒以内に連続で通知を処理するとコンボ発生！</p>
-                <p><strong>10コンボ達成ごと</strong>にボーナスでバッテリーが回復します。</p>
-            </div>
-        `;
-    } else if (type === 'types') {
-        titleEl.textContent = '通知の種類とダメージ';
-        contentEl.innerHTML = `
-            <div class="p-3.5 bg-[#1c1c1e] rounded-2xl border border-white/5 space-y-3">
-                <div class="font-bold text-white text-sm">通知の種類について</div>
-                <p>スマホには様々な社内通知や理不尽な連絡が届きます。</p>
-                <ul class="space-y-2 text-[11px] text-gray-300">
-                    <li><strong class="text-blue-400">社内チャット・メール:</strong> 休日対応や無茶振りは右スワイプ（反抗）で回避するのが安全なことも。</li>
-                    <li><strong class="text-green-400">電話:</strong> 上司や社長からの不在着信。誠意を見せるか無視するか。</li>
-                    <li><strong class="text-pink-400">ヘルスケア:</strong> 長時間作業の警告。エナドリ等でバッテリー回復のチャンス！</li>
-                    <li><strong class="text-red-600">システムアラート:</strong> サーバーダウンなどの緊急連絡。</li>
-                </ul>
-                <p class="text-gray-400">※通知ごとのダメージや選択肢を見極めて最適な対応を選びましょう。</p>
-            </div>
-        `;
-    } else if (type === 'ranking-rule') {
-        titleEl.textContent = '評価基準（ランキング）';
-        contentEl.innerHTML = `
-            <div class="p-3.5 bg-[#1c1c1e] rounded-2xl border border-white/5 space-y-3">
-                <div class="font-bold text-white text-sm">ランキングの決定方法</div>
-                <p>以下の順番で総合的に評価されます：</p>
-                <ol class="list-decimal list-inside space-y-1 text-gray-300">
-                    <li>クリアしたかどうか</li>
-                    <li>クリアタイムが早い順</li>
-                    <li>残充電が多い順</li>
-                    <li>捌いた通知数が多い順</li>
-                </ol>
-                <p class="text-[11px] text-amber-400 mt-2">※「パート（5件）」難易度はランキング対象外となります。ランキング登録にはノーマル（10件）以上をプレイしてください。</p>
-            </div>
-        `;
-    }
-}
-
-function closeSettingDetail() {
-    document.getElementById('settings-detail-view').classList.add('hidden');
-    document.getElementById('settings-main-view').classList.remove('hidden');
-    updateSettingsUsernameDisplay();
-}
-
-function updateSettingsUsernameDisplay() {
-    const subEl = document.getElementById('settings-username-sub');
-    if (subEl) {
-        subEl.textContent = savedUserName ? savedUserName : '未設定';
-    }
-}
-
-function saveUsernameFromSettings() {
-    const input = document.getElementById('username-input');
-    const msg = document.getElementById('username-msg');
-    if (!input) return;
-
-    savedUserName = input.value.trim().substring(0, 10);
-    input.value = savedUserName;
-    updateSettingsUsernameDisplay();
-
-    const rankingInput = document.getElementById('ranking-username-input');
-    if (rankingInput) {
-        rankingInput.value = savedUserName;
-    }
-    
-    if (msg) {
-        msg.classList.remove('hidden');
-        setTimeout(() => msg.classList.add('hidden'), 2000);
-    }
+function hideHowToPlay() {
+    document.getElementById('how-to-play-screen').classList.add('hidden');
 }
 
 function backToTitle() {
     document.getElementById('clear-screen').classList.add('hidden');
     document.getElementById('title-screen').classList.remove('hidden');
-    hideSettings();
     updateCarrierDisplay();
 }
 
@@ -209,9 +71,72 @@ function toggleWallpaper() {
     }
 }
 
-function changeDifficulty() {
-    const select = document.getElementById('difficulty-select');
-    targetClearCount = parseInt(select.value, 10);
+// 難易度選択ポップアップ（タイトル画面用）
+function openDifficultyModal() {
+    document.getElementById('difficulty-modal').classList.remove('hidden');
+    updateDifficultyModalUI();
+}
+
+function closeDifficultyModal() {
+    document.getElementById('difficulty-modal').classList.add('hidden');
+}
+
+function selectDifficulty(diffStr) {
+    targetClearCount = parseInt(diffStr, 10);
+    updateDifficultyModalUI();
+}
+
+function updateDifficultyModalUI() {
+    ['5', '10', '20', '30'].forEach(d => {
+        const checkIcon = document.getElementById(`diff-check-${d}`);
+        const btn = document.getElementById(`diff-btn-${d}`);
+        if (checkIcon && btn) {
+            if (parseInt(d, 10) === targetClearCount) {
+                checkIcon.classList.remove('hidden');
+                btn.classList.add('border-purple-500', 'bg-white/20');
+            } else {
+                checkIcon.classList.add('hidden');
+                btn.classList.remove('border-purple-500', 'bg-white/20');
+            }
+        }
+    });
+}
+
+// 設定サブ画面の開閉制御
+function openSettingsSubScreen(subName) {
+    const subEl = document.getElementById(`settings-sub-${subName}`);
+    if (subEl) {
+        subEl.classList.remove('hidden');
+    }
+}
+
+function closeSettingsSubScreen(subName) {
+    const subEl = document.getElementById(`settings-sub-${subName}`);
+    if (subEl) {
+        subEl.classList.add('hidden');
+    }
+}
+
+function saveUsername() {
+    const input = document.getElementById('username-input');
+    const msg = document.getElementById('username-msg');
+    savedUserName = input.value.trim().substring(0, 10); // 10文字までに制限
+    input.value = savedUserName;
+
+    // 設定メイン画面のリアルタイム表示を更新
+    const settingsDisplay = document.getElementById('settings-username-display');
+    if (settingsDisplay) {
+        settingsDisplay.textContent = savedUserName ? savedUserName : "未設定";
+    }
+
+    // リザルト側の入力欄にも即時同期
+    const rankingInput = document.getElementById('ranking-username-input');
+    if (rankingInput) {
+        rankingInput.value = savedUserName;
+    }
+    
+    msg.classList.remove('hidden');
+    setTimeout(() => msg.classList.add('hidden'), 2000);
 }
 
 // -----------------------
@@ -235,51 +160,58 @@ function formatElapsedTime(ms) {
 
 function getDifficultyText(count) {
     switch (count) {
-        case 5: return 'パート(5件)';
-        case 10: return 'ノーマル(10件)';
-        case 20: return 'フルタイム(20件)';
-        case 30: return 'ハード(30件)';
+        case 5: return 'パート (5件)';
+        case 10: return 'レギュラー (10件)';
+        case 20: return 'フルタイム (20件)';
+        case 30: return 'オーバータイム (30件)';
         default: return `カスタム(${count}件)`;
     }
 }
 
 // -----------------------
-// ランダム通知生成ロジック
+// ランダム通知生成ロジック（ダメージ0を多数拡充）
 // -----------------------
 function createRandomNotification() {
     const id = notificationIdCounter++;
-    const createdAt = Date.now();
-    let types = ['missedCall', 'chat', 'calendar', 'overtime', 'email', 'expense', 'systemAlert', 'health', 'thanks', 'spam', 'praise'];
+    const createdAt = Date.now(); // 通知が生成された時刻を記録
+    let types = ['missedCall', 'chat', 'calendar', 'overtime', 'email', 'expense', 'systemAlert', 'survey', 'health', 'thanks', 'spam', 'praise'];
     
+    // 充電100%以上ならヘルスケア通知を出さない
     if (currentBattery >= 100) {
         types = types.filter(t => t !== 'health');
     }
 
     const selectedType = types[Math.floor(Math.random() * types.length)];
-    const isSpecialCase = Math.random() < 0.5;
-    const n = savedUserName ? `${savedUserName}さん、` : '';
+    const isSpecialCase = Math.random() < 0.5; // 分岐用のランダムフラグ
+    const n = savedUserName ? `${savedUserName}さん、` : ''; // ユーザー名差し込み用
 
     switch (selectedType) {
         case 'missedCall': {
             const missedCount = Math.floor(Math.random() * 300) + 1;
             return {
-                id, createdAt, appName: '電話',
+                id,
+                createdAt,
+                appName: '電話',
                 title: isSpecialCase ? `不在着信：社長 (${missedCount}件)` : `不在着信：上司 (${missedCount}件)`,
-                icon: 'fa-phone', bgColor: 'bg-green-500',
+                icon: 'fa-phone',
+                bgColor: 'bg-green-500',
                 actions: isSpecialCase ? [
                     { label: '土下座しながらかけ直す', type: 'slave', damage: 0, msg: '必死の誠意が伝わりノーダメージ！' },
                     { label: '退職届を準備する', type: 'rebel', damage: 30, msg: 'もう何も怖くありません。' }
                 ] : [
                     { label: 'すぐかけ直す', type: 'slave', damage: 0, msg: '「すばやい対応だ」と褒められました。' },
-                    { label: '電源を切る', type: 'rebel', damage: 20, msg: '物理적으로シャットダウンしました。' }
+                    { label: '電源を切る', type: 'rebel', damage: 20, msg: '物理的にシャットダウンしました。' }
                 ]
             };
         }
         case 'chat': {
             return {
-                id, createdAt, appName: '社内チャット',
+                id,
+                createdAt,
+                appName: '社内チャット',
                 title: isSpecialCase ? `部長：${n}休日にごめん、これお願い` : `部長：${n}例の件、今日中によろしく`,
-                icon: 'fa-comment-dots', bgColor: 'bg-blue-500',
+                icon: 'fa-comment-dots',
+                bgColor: 'bg-blue-500',
                 actions: isSpecialCase ? [
                     { label: '休日対応する', type: 'slave', damage: 10, msg: '貴重な休みが消滅しました。' },
                     { label: '月曜に見る', type: 'rebel', damage: 0, msg: '休日の権利を守り抜き無傷！' }
@@ -292,9 +224,12 @@ function createRandomNotification() {
         case 'calendar': {
             const hour = Math.floor(Math.random() * 5) + 1;
             return {
-                id, createdAt, appName: 'カレンダー',
+                id,
+                createdAt,
+                appName: 'カレンダー',
                 title: isSpecialCase ? `このあと ${hour}:00 役員報告会` : `このあと ${hour}:00 任意リフレッシュ会`,
-                icon: 'fa-calendar', bgColor: 'bg-red-500',
+                icon: 'fa-calendar',
+                bgColor: 'bg-red-500',
                 actions: isSpecialCase ? [
                     { label: '準備して挑む', type: 'slave', damage: 20, msg: '胃に穴が開きそうです。' },
                     { label: 'すっぽかす', type: 'rebel', damage: 30, msg: '伝説の社員になりました。' }
@@ -313,9 +248,12 @@ function createRandomNotification() {
             const targetName = savedUserName ? `${savedUserName}の` : '今月の';
 
             return {
-                id, createdAt, appName: '勤怠管理',
+                id,
+                createdAt,
+                appName: '勤怠管理',
                 title: `${targetName}残業時間：${hoursStr}時間${minsStr}分`,
-                icon: 'fa-stopwatch', bgColor: 'bg-yellow-500',
+                icon: 'fa-stopwatch',
+                bgColor: 'bg-yellow-500',
                 actions: isHighOvertime ? [
                     { label: '見なかったことにする', type: 'slave', damage: 5, msg: '次は労基に連絡します。' },
                     { label: '定時打刻を申請', type: 'rebel', damage: 0, msg: 'ノーダメージで申請が完了しました！' }
@@ -328,9 +266,12 @@ function createRandomNotification() {
         case 'email': {
             const count = (Math.floor(Math.random() * 2000) + 100).toLocaleString();
             return {
-                id, createdAt, appName: 'メール',
+                id,
+                createdAt,
+                appName: 'メール',
                 title: isSpecialCase ? `未読 ${count}件(重要あり)` : `未読 ${count}件`,
-                icon: 'fa-envelope', bgColor: 'bg-blue-400',
+                icon: 'fa-envelope',
+                bgColor: 'bg-blue-400',
                 actions: isSpecialCase ? [
                     { label: '検索フィルターで瞬殺', type: 'slave', damage: 0, msg: '重要メールのみ一元処理完了！' },
                     { label: 'すべて迷惑メールへ', type: 'rebel', damage: 25, msg: '重大な損失が発生した予感がします。' }
@@ -342,9 +283,12 @@ function createRandomNotification() {
         }
         case 'expense': {
             return {
-                id, createdAt, appName: '経費精算',
+                id,
+                createdAt,
+                appName: '経費精算',
                 title: isSpecialCase ? '高額な経費申請が承認されました！' : '経費申請が承認されました',
-                icon: 'fa-receipt', bgColor: 'bg-purple-500',
+                icon: 'fa-receipt',
+                bgColor: 'bg-purple-500',
                 actions: isSpecialCase ? [
                     { label: '領収書を即提出', type: 'slave', damage: 0, msg: '全額無事に還付されました！' },
                     { label: '経理にお礼を言う', type: 'rebel', damage: 0, msg: '経理部との信頼関係が深まりました。' }
@@ -356,9 +300,12 @@ function createRandomNotification() {
         }
         case 'systemAlert': {
             return {
-                id, createdAt, appName: 'システムアラート',
+                id,
+                createdAt,
+                appName: 'システムアラート',
                 title: isSpecialCase ? '【超緊急】サーバーダウン' : '【定期】セキュリティ更新のお願い',
-                icon: 'fa-triangle-exclamation', bgColor: 'bg-red-600',
+                icon: 'fa-triangle-exclamation',
+                bgColor: 'bg-red-600',
                 actions: isSpecialCase ? [
                     { label: '叩き起こされて対応', type: 'slave', damage: 35, msg: '睡眠時間が消滅しました。' },
                     { label: 'スマホの電源を切る', type: 'rebel', damage: 20, msg: '朝起きたら大変なことになっていました。' }
@@ -370,9 +317,12 @@ function createRandomNotification() {
         }
         case 'health': {
             return {
-                id, createdAt, appName: 'ヘルスケア',
+                id,
+                createdAt,
+                appName: 'ヘルスケア',
                 title: isSpecialCase ? '心拍数が異常です。休息を！' : '長時間の作業が続いています',
-                icon: 'fa-heart-pulse', bgColor: 'bg-pink-500',
+                icon: 'fa-heart-pulse',
+                bgColor: 'bg-pink-500',
                 actions: isSpecialCase ? [
                     { label: '深呼吸する', type: 'slave', damage: 0, msg: '深呼吸して心が落ち着きました。' },
                     { label: '気合いで乗り切る', type: 'rebel', damage: 20, msg: '限界を超えました。' }
@@ -384,9 +334,12 @@ function createRandomNotification() {
         }
         case 'thanks': {
             return {
-                id, createdAt, appName: '感謝のメッセージ',
+                id,
+                createdAt,
+                appName: '感謝のメッセージ',
                 title: `${n}フォロー助かりました！ありがとう！`,
-                icon: 'fa-thumbs-up', bgColor: 'bg-emerald-500',
+                icon: 'fa-thumbs-up',
+                bgColor: 'bg-emerald-500',
                 actions: [
                     { label: '「どういたしまして！」', type: 'slave', damage: 0, msg: 'ほっこり温かい気持ちになりました。' },
                     { label: '「ジュースおごってね」', type: 'rebel', damage: 0, msg: '冗談を言い合える仲間が増えました。' }
@@ -395,9 +348,12 @@ function createRandomNotification() {
         }
         case 'spam': {
             return {
-                id, createdAt, appName: '雑務リマインダー',
+                id,
+                createdAt,
+                appName: '雑務リマインダー',
                 title: '【周知】給湯室の清掃当番について',
-                icon: 'fa-broom', bgColor: 'bg-indigo-500',
+                icon: 'fa-broom',
+                bgColor: 'bg-indigo-500',
                 actions: [
                     { label: '既読をつけて終了', type: 'slave', damage: 0, msg: 'ノータイムで処理完了！' },
                     { label: 'スタンプで了解', type: 'rebel', damage: 0, msg: '素早いリアクションでスルー成功！' }
@@ -406,9 +362,12 @@ function createRandomNotification() {
         }
         case 'praise': {
             return {
-                id, createdAt, appName: '人事評価',
+                id,
+                createdAt,
+                appName: '人事評価',
                 title: isSpecialCase ? `【承認】${n}定時退社申請が承認されました` : '今週の業務効率賞に選出されました！',
-                icon: 'fa-award', bgColor: 'bg-amber-500',
+                icon: 'fa-award',
+                bgColor: 'bg-amber-500',
                 actions: [
                     { label: 'ガッツポーズ', type: 'slave', damage: 0, msg: 'モチベーションが維持されました！' },
                     { label: 'さっさと帰宅準備', type: 'rebel', damage: 0, msg: 'ソクホウで退勤の準備を始めました！' }
@@ -417,9 +376,12 @@ function createRandomNotification() {
         }
         default: {
             return {
-                id, createdAt, appName: '人事部',
+                id,
+                createdAt,
+                appName: '人事部',
                 title: isSpecialCase ? `【要出頭】${n}人事面談のお知らせ` : '【要回答】従業員満足度アンケート',
-                icon: 'fa-clipboard-list', bgColor: 'bg-teal-500',
+                icon: 'fa-clipboard-list',
+                bgColor: 'bg-teal-500',
                 actions: isSpecialCase ? [
                     { label: 'おとなしく面談に行く', type: 'slave', damage: 20, msg: 'みっちり絞られました。' },
                     { label: '無断欠席する', type: 'rebel', damage: 30, msg: '退職へのカウントダウンが始まりました。' }
@@ -439,7 +401,6 @@ window.onload = () => {
     setRandomDate();
     startClock();
     isClockStarted = true;
-    updateSettingsUsernameDisplay();
 };
 
 function init() {
@@ -465,7 +426,7 @@ function startNotificationSpawner() {
         }
 
         const newNotif = createRandomNotification();
-        activeNotifications.unshift(newNotif);
+        activeNotifications.unshift(newNotif); // 先頭に追加
         renderNotifications();
     }, 2500);
 }
@@ -476,21 +437,24 @@ function setRandomDate() {
     const day = Math.floor(Math.random() * 28) + 1; 
     const daysOfWeek = ['(日)', '(月)', '(火)', '(水)', '(木)', '(金)', '(土)'];
     const randomDayOfWeek = daysOfWeek[Math.floor(Math.random() * daysOfWeek.length)];
+
     dateDisplay.textContent = `${month}月${day}日 ${randomDayOfWeek}`;
 }
 
 function setRandomBattery() {
     currentBattery = 100;
-    initialBattery = 100;
+    initialBattery = 100; // 開始時のバッテリーを保持
     updateBatteryDisplay(currentBattery);
 }
 
 function updateBatteryDisplay(percent) {
     const batteryText = document.getElementById('battery-text');
     const batteryIcon = document.getElementById('battery-icon');
+
     if (!batteryText || !batteryIcon) return;
 
     batteryText.textContent = `${percent}%`;
+
     batteryIcon.className = 'fa-solid text-lg';
     batteryText.classList.remove('text-red-500');
 
@@ -544,6 +508,7 @@ function updateCarrierDisplay(combo = 0) {
         carrierEl.textContent = `${combo} COMBO`;
         carrierEl.classList.add('combo-active');
 
+        // 3.5秒後に元に戻す
         comboTimerId = setTimeout(() => {
             carrierEl.textContent = 'mobile';
             carrierEl.classList.remove('combo-active');
@@ -556,18 +521,20 @@ function updateCarrierDisplay(combo = 0) {
 
 function startClock() {
     const timeDisplay = document.getElementById('time-display');
+    
     function update() {
         const now = new Date();
         const hours = now.getHours().toString();
         const minutes = now.getMinutes().toString().padStart(2, '0');
         timeDisplay.textContent = `${hours}:${minutes}`;
     }
+    
     update();
     setInterval(update, 1000);
 }
 
 // -----------------------
-// UI描画・インタラクション
+// UI描画・インタラクション（スワイプ機能対応）
 // -----------------------
 function renderNotifications() {
     const container = document.getElementById('notification-container');
@@ -631,18 +598,23 @@ function renderNotifications() {
         card.appendChild(mainContent);
         card.appendChild(actionsArea);
         
+        // スワイプイベント登録（直感処理）
         attachSwipeEvents(card, notif);
+
         container.insertBefore(card, container.firstChild);
     });
 }
 
+// -----------------------
+// スワイプジェスチャー処理（直感アクション追加）
+// -----------------------
 function attachSwipeEvents(card, notif) {
     let startX = 0;
     let currentX = 0;
     let isDragging = false;
 
     const onStart = (e) => {
-        if (e.target.closest('button')) return;
+        if (e.target.closest('button')) return; // ボタンタップ時はカード移動をキャンセル
         isDragging = true;
         startX = e.touches ? e.touches[0].clientX : e.clientX;
         card.classList.add('swiping');
@@ -653,12 +625,14 @@ function attachSwipeEvents(card, notif) {
         const x = e.touches ? e.touches[0].clientX : e.clientX;
         currentX = x - startX;
 
+        // 水平移動のみ（傾けない）
         card.style.transform = `translateX(${currentX}px)`;
 
+        // 方向別の発光フィードバック
         if (currentX > 30) {
-            card.style.backgroundColor = 'rgba(239, 68, 68, 0.35)';
+            card.style.backgroundColor = 'rgba(239, 68, 68, 0.35)'; // 右＝反抗（赤）
         } else if (currentX < -30) {
-            card.style.backgroundColor = 'rgba(59, 130, 246, 0.35)';
+            card.style.backgroundColor = 'rgba(59, 130, 246, 0.35)'; // 左＝模範（青）
         } else {
             card.style.backgroundColor = '';
         }
@@ -671,13 +645,15 @@ function attachSwipeEvents(card, notif) {
         card.style.transform = '';
         card.style.backgroundColor = '';
 
-        const threshold = 70;
+        const threshold = 70; // スワイプ確定しきい値(px)
         if (currentX < -threshold) {
+            // 左スワイプ：1番目の選択肢（模範）
             if (notif.actions && notif.actions[0]) {
                 const act = notif.actions[0];
                 handleAction(notif.id, act.msg, act.damage, act.type, 'left');
             }
         } else if (currentX > threshold) {
+            // 右スワイプ：2番目の選択肢（反抗）
             if (notif.actions && notif.actions[1]) {
                 const act = notif.actions[1];
                 handleAction(notif.id, act.msg, act.damage, act.type, 'right');
@@ -717,6 +693,7 @@ function handleAction(id, message, damage = 10, actionType = 'slave', direction 
     const card = document.getElementById(`notif-${id}`);
     if (!card) return;
 
+    // コンボ判定（3秒以内 かつ ダメージ0以下でコンボ加算。ダメージを受けるとコンボ途切れる）
     const now = Date.now();
     const timeDiff = now - lastClearedTime;
 
@@ -727,35 +704,45 @@ function handleAction(id, message, damage = 10, actionType = 'slave', direction 
             comboCount = 1;
         }
     } else {
+        // ダメージを食らったらコンボ中断！
         comboCount = 0;
     }
     lastClearedTime = now;
 
+    // 通常のダメージ適用
     currentBattery = Math.min(100, Math.max(0, currentBattery - damage));
 
+    // 手応え演出1：大きなダメージ（20以上）を受けたときに画面を揺らす
     const phoneFrame = document.querySelector('.phone-frame');
     if (damage >= 20) {
         phoneFrame.classList.add('shake');
         setTimeout(() => phoneFrame.classList.remove('shake'), 400);
     }
 
+    // 10コンボ毎に回復ボーナス処理（10, 20, 30...）
     let displayMessage = message;
     if (comboCount > 0 && comboCount % 10 === 0) {
-        const bonusBattery = 15;
+        const bonusBattery = 15; // 10コンボ毎に15%固定回復
         currentBattery = Math.min(100, currentBattery + bonusBattery);
+        
+        // バッテリーアイコン直下に%数値を表示 & 発光演出
         showBatteryBonusText(bonusBattery);
 
         phoneFrame.classList.add('battery-pulse');
         setTimeout(() => phoneFrame.classList.remove('battery-pulse'), 600);
     } else if (damage < 0) {
+        // エナドリ等での回復時も発光
         showBatteryBonusText(Math.abs(damage));
         phoneFrame.classList.add('battery-pulse');
         setTimeout(() => phoneFrame.classList.remove('battery-pulse'), 600);
     }
 
+    // キャリア位置にコンボ状態を表示
     updateCarrierDisplay(comboCount);
+
     updateBatteryDisplay(currentBattery);
 
+    // アニメーション開始と同時に内部データとカウントを更新
     activeNotifications = activeNotifications.filter(n => n.id !== id);
     clearedNotificationsCount++;
 
@@ -818,12 +805,14 @@ function prepareResultData(isClear = true) {
         rankingInput.value = savedUserName || "";
     }
 
-    // パート（難易度5）の場合はランキング登録エリアを非表示にする
-    const submitArea = document.getElementById('ranking-submit-area');
-    if (targetClearCount === 5) {
-        if (submitArea) submitArea.classList.add('hidden');
-    } else {
-        if (submitArea) submitArea.classList.remove('hidden');
+    // パート（5件）の場合はランキング登録エリアを非表示にする
+    const submitContainer = document.getElementById('ranking-submit-container');
+    if (submitContainer) {
+        if (targetClearCount === 5) {
+            submitContainer.classList.add('hidden');
+        } else {
+            submitContainer.classList.remove('hidden');
+        }
     }
 
     resetResultSubmitState();
@@ -883,6 +872,7 @@ function updateDummyWidgets(isClear) {
         score = Math.floor(score / 2);
     }
 
+    // 自己ベスト更新判定（ローカルストレージ保持）
     const storageKey = `notif_survival_best_score_${targetClearCount}`;
     const previousBest = parseInt(localStorage.getItem(storageKey) || "0", 10);
     
@@ -964,7 +954,8 @@ function openRankingModal(diff) {
     if (diff) {
         currentRankingDifficulty = diff;
     } else {
-        currentRankingDifficulty = targetClearCount === 5 ? "10" : targetClearCount.toString();
+        // パートの場合はデフォルトをレギュラー（10）にする
+        currentRankingDifficulty = (targetClearCount === 5) ? "10" : targetClearCount.toString();
     }
     
     document.getElementById('ranking-modal').classList.remove('hidden');
@@ -1018,6 +1009,7 @@ async function fetchRanking(diff) {
             const clearedCount = item.clearedCount ?? item.cleared_count ?? 0;
             const clearedStr = `${clearedCount}件`;
             
+            // スコア算出（クリア件数 × 残バッテリー × 100 / 秒数）
             const endBattery = item.endBattery ?? 0;
             const clearTimeSec = item.clearTimeSeconds || 1;
             const isClear = item.isClear ?? item.is_clear ?? 1;
@@ -1054,7 +1046,7 @@ function updateUserRankStatus(rankingData) {
     const diffText = getDifficultyText(parseInt(currentRankingDifficulty, 10));
 
     if (!savedUserName) {
-        statusEl.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i>あなたはまだ未登録です。<br>ノーマル以上でプレイしてランキングに登録しよう！`;
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i>あなたはまだ未登録です。<br>勤務（プレイ）してランキングに登録しよう！`;
         statusEl.classList.remove('hidden');
         return;
     }
@@ -1066,7 +1058,7 @@ function updateUserRankStatus(rankingData) {
         statusEl.innerHTML = `<i class="fa-solid fa-circle-check text-green-400 mr-1"></i><strong>${escapeHtml(savedUserName)}</strong> さんの【${diffText}】最高順位: <strong>${rank}位</strong>`;
         statusEl.classList.remove('hidden');
     } else {
-        statusEl.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i><strong>${escapeHtml(savedUserName)}</strong> さんは【${diffText}】未登録です。<br>ノーマル以上でプレイしてランキングに登録しよう！`;
+        statusEl.innerHTML = `<i class="fa-solid fa-circle-info mr-1"></i><strong>${escapeHtml(savedUserName)}</strong> さんは【${diffText}】未登録です。<br>勤務（プレイ）してランキングに登録しよう！`;
         statusEl.classList.remove('hidden');
     }
 }
@@ -1082,7 +1074,6 @@ async function generateSignature(data) {
 
 async function submitRankingScore() {
     if (isScoreSubmitted) return;
-    if (targetClearCount === 5) return; // パートは登録不可
 
     const nameInput = document.getElementById('ranking-username-input');
     const msgEl = document.getElementById('ranking-submit-msg');
@@ -1119,7 +1110,12 @@ async function submitRankingScore() {
         if (!response.ok) throw new Error('送信エラー');
 
         savedUserName = name;
-        updateSettingsUsernameDisplay();
+        const mainInput = document.getElementById('username-input');
+        if (mainInput) mainInput.value = name;
+
+        // 設定画面側の表示も更新
+        const settingsDisplay = document.getElementById('settings-username-display');
+        if (settingsDisplay) settingsDisplay.textContent = name;
 
         isScoreSubmitted = true;
         if (nameInput) {
