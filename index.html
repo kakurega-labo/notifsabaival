@@ -123,7 +123,7 @@
                 <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pb-6 pr-1">
                     
                     <!-- グループ1: ユーザー名 -->
-                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10">
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shrink-0">
                         <div onclick="openSettingsSubScreen('username-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white text-sm shadow">
@@ -139,7 +139,7 @@
                     </div>
 
                     <!-- グループ2: 各種ヘルプ・システム -->
-                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 divide-y divide-white/5">
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 divide-y divide-white/5 shrink-0">
                         <div onclick="openSettingsSubScreen('howto-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg bg-orange-500 flex items-center justify-center text-white text-sm shadow">
@@ -182,7 +182,7 @@
                     </div>
 
                     <!-- グループ3: 壁紙表示設定 -->
-                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10">
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shrink-0">
                         <div class="flex items-center justify-between p-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white text-sm shadow">
@@ -194,6 +194,22 @@
                                 <input type="checkbox" id="wallpaper-toggle" class="sr-only peer" checked onchange="toggleWallpaper()">
                                 <div class="w-11 h-6 bg-gray-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500"></div>
                             </label>
+                        </div>
+                    </div>
+
+                    <!-- グループ4: デザイン比較（リザルト画面デザイン選択） -->
+                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shrink-0">
+                        <div onclick="openSettingsSubScreen('design-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-lg bg-pink-600 flex items-center justify-center text-white text-sm shadow">
+                                    <i class="fa-solid fa-palette"></i>
+                                </div>
+                                <div class="text-left">
+                                    <div class="text-sm font-semibold">デザイン比較（リザルト画面）</div>
+                                    <div id="settings-design-display" class="text-xs text-gray-400">標準（ウィジェット風）</div>
+                                </div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-xs text-gray-500"></i>
                         </div>
                     </div>
 
@@ -317,9 +333,46 @@
                 </div>
             </div>
 
+            <!-- 設定サブ画面：デザイン比較（リザルト画面デザイン選択） -->
+            <div id="settings-sub-design-sub" class="hidden absolute inset-0 flex flex-col bg-black z-[55] text-white p-4">
+                <div class="flex items-center justify-between mb-4 mt-2 px-1">
+                    <button onclick="closeSettingsSubScreen('design-sub')" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm font-semibold">
+                        <i class="fa-solid fa-chevron-left"></i> 設定
+                    </button>
+                    <h3 class="text-base font-bold">デザイン比較</h3>
+                    <div class="w-12"></div>
+                </div>
+                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pt-2">
+                    <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 space-y-3">
+                        <h4 class="text-sm font-bold text-white">リザルト画面のデザイン選択</h4>
+                        <p class="text-xs text-gray-400 leading-relaxed">
+                            リザルト画面のUIスタイルを選択できます。
+                        </p>
+                        <div class="flex flex-col gap-2 pt-1">
+                            <button onclick="selectResultDesign('widget')" id="design-btn-widget" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-purple-500 text-left transition-all flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-sm">標準（ウィジェット風）</div>
+                                    <div class="text-[10px] text-gray-400">カードとウィジェットで構成されたモダンなデザイン</div>
+                                </div>
+                                <i class="fa-solid fa-check text-purple-400" id="design-check-widget"></i>
+                            </button>
+                            <button onclick="selectResultDesign('mail')" id="design-btn-mail" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
+                                <div>
+                                    <div class="font-bold text-sm">メール風</div>
+                                    <div class="text-[10px] text-gray-400">人事部からの通知メール形式のデザイン</div>
+                                </div>
+                                <i class="fa-solid fa-check text-purple-400 hidden" id="design-check-mail"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- リザルト / ゲームオーバー画面 -->
             <div id="clear-screen" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-black/90 via-slate-950/90 to-black/95 backdrop-blur-lg z-40 text-white p-5 text-center overflow-y-auto no-scrollbar">
-                <div class="w-full max-w-[310px] flex flex-col items-center py-2 my-auto">
+                
+                <!-- 1. 標準（ウィジェット風）レイアウト -->
+                <div id="result-widget-layout" class="w-full max-w-[310px] flex flex-col items-center py-2 my-auto">
                     
                     <!-- ヘッダーアイコン・演出 -->
                     <div class="relative mb-2 flex items-center justify-center">
@@ -426,6 +479,104 @@
                     </div>
 
                 </div>
+
+                <!-- 2. メール風レイアウト -->
+                <div id="result-mail-layout" class="hidden w-full max-w-[320px] flex flex-col text-left py-2 my-auto bg-zinc-900/95 border border-white/15 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
+                    <!-- メールヘッダー -->
+                    <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center text-white text-xs font-bold border border-white/20 shadow">
+                                人事
+                            </div>
+                            <div>
+                                <div class="text-xs font-bold text-white">人事部</div>
+                                <div class="text-[10px] text-gray-400">宛先: あなた &gt;</div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] text-gray-400">18:51</span>
+                    </div>
+
+                    <!-- メール本文 -->
+                    <div class="text-xs text-gray-200 space-y-3 leading-relaxed overflow-y-auto max-h-[55vh] custom-scrollbar pr-1">
+                        <div>
+                            <div class="text-sm font-bold text-white mb-1">重要なお知らせ</div>
+                            <p class="text-[11px] text-gray-300">今回の勤務実績についてお知らせいたします。</p>
+                        </div>
+
+                        <div class="bg-black/40 rounded-xl p-3 border border-white/10 space-y-1">
+                            <div class="font-bold text-white flex justify-between">
+                                <span>ステータス:</span>
+                                <span id="mail-res-status" class="text-amber-400">MISSION CLEAR</span>
+                            </div>
+                            <div class="font-bold text-white flex justify-between">
+                                <span>ランク:</span>
+                                <span id="mail-res-rank" class="text-amber-300">C</span>
+                            </div>
+                            <div class="font-bold text-white flex justify-between">
+                                <span>スコア:</span>
+                                <span id="mail-res-score" class="text-amber-300">0 pts</span>
+                            </div>
+                        </div>
+
+                        <div class="text-gray-500 text-center tracking-widest text-[10px] my-1">
+                            ------------------------
+                        </div>
+                        
+                        <div>
+                            <div class="font-bold text-amber-300 mb-1.5 flex items-center gap-1">
+                                <i class="fa-solid fa-list-check"></i> ■実績詳細
+                            </div>
+                            <div class="pl-2 space-y-1.5 text-[11px]">
+                                <div><strong>【捌いた通知】</strong><br><span id="mail-res-cleared">0件</span></div>
+                                <div><strong>【勤務時間】</strong><br><span id="mail-res-time">0分00秒</span></div>
+                                <div><strong>【残充電】</strong><br><span id="mail-res-battery">100%</span></div>
+                                <div><strong>【難易度】</strong><br><span id="mail-res-diff">レギュラー</span></div>
+                            </div>
+                        </div>
+
+                        <div class="text-gray-500 text-center tracking-widest text-[10px] my-2">
+                            ------------------------
+                        </div>
+
+                        <!-- ランキング登録（メール内リンク・入力） -->
+                        <div id="mail-ranking-container" class="space-y-1.5">
+                            <div class="text-blue-400 font-bold text-[11px]">▽ランキング登録はこちら▽</div>
+                            <div class="flex gap-2 items-center">
+                                <input type="text" id="mail-ranking-username-input" maxlength="10" placeholder="名前を入力(10文字)" class="flex-1 bg-black/60 border border-blue-500/40 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-400">
+                                <button id="mail-ranking-submit-btn" onclick="submitRankingScore()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold text-white transition-all whitespace-nowrap">
+                                    登録する
+                                </button>
+                            </div>
+                            <p id="mail-ranking-submit-msg" class="text-[10px] text-blue-300 hidden font-medium text-center"></p>
+                        </div>
+
+                        <div class="space-y-2 pt-2 border-t border-white/10">
+                            <div>
+                                <div class="text-blue-400 font-bold text-[11px] mb-0.5">▽もう一度遊ぶ方はこちら▽</div>
+                                <button onclick="startGame()" class="text-blue-300 hover:text-blue-200 underline text-xs font-semibold text-left">
+                                    もう一度遊ぶ
+                                </button>
+                            </div>
+                            <div>
+                                <div class="text-blue-400 font-bold text-[11px] mb-0.5">▽ランキングを見る方はこちら▽</div>
+                                <button onclick="openRankingModal()" class="text-blue-300 hover:text-blue-200 underline text-xs font-semibold text-left">
+                                    ランキングを見る
+                                </button>
+                            </div>
+                            <div>
+                                <div class="text-blue-400 font-bold text-[11px] mb-0.5">▽タイトル画面に戻る方はこちら▽</div>
+                                <button onclick="backToTitle()" class="text-blue-300 hover:text-blue-200 underline text-xs font-semibold text-left">
+                                    タイトル画面に戻る
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="text-gray-500 text-center tracking-widest text-[10px] pt-1">
+                            ------------------------
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- 全画面共通：ランキングモーダル -->
