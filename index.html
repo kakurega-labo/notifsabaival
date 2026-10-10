@@ -68,7 +68,7 @@
 
             <!-- 難易度選択ポップアップ（タイトル画面用） -->
             <div id="difficulty-modal" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md z-[60] p-6">
-                <div class="bg-zinc-900 border border-white/15 rounded-2xl w-full p-5 text-white shadow-2xl">
+                <div class="bg-zinc-900 border border-white/15 rounded-2xl w-full max-w-[300px] p-5 text-white shadow-2xl">
                     <h3 class="text-lg font-bold mb-3 text-center flex items-center justify-center gap-2">
                         <i class="fa-solid fa-layer-group text-purple-400"></i> 難易度選択
                     </h3>
@@ -197,22 +197,6 @@
                         </div>
                     </div>
 
-                    <!-- グループ4: デザイン比較（リザルト画面デザイン選択） -->
-                    <div class="bg-zinc-900 rounded-2xl overflow-hidden border border-white/10 shrink-0">
-                        <div onclick="openSettingsSubScreen('design-sub')" class="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer transition-colors">
-                            <div class="flex items-center gap-3">
-                                <div class="w-8 h-8 rounded-lg bg-pink-600 flex items-center justify-center text-white text-sm shadow">
-                                    <i class="fa-solid fa-palette"></i>
-                                </div>
-                                <div class="text-left">
-                                    <div class="text-sm font-semibold">デザイン比較（リザルト画面）</div>
-                                    <div id="settings-design-display" class="text-xs text-gray-400">標準（ウィジェット風）</div>
-                                </div>
-                            </div>
-                            <i class="fa-solid fa-chevron-right text-xs text-gray-500"></i>
-                        </div>
-                    </div>
-
                 </div>
             </div>
 
@@ -333,249 +317,100 @@
                 </div>
             </div>
 
-            <!-- 設定サブ画面：デザイン比較（リザルト画面デザイン選択） -->
-            <div id="settings-sub-design-sub" class="hidden absolute inset-0 flex flex-col bg-black z-[55] text-white p-4">
-                <div class="flex items-center justify-between mb-4 mt-2 px-1">
-                    <button onclick="closeSettingsSubScreen('design-sub')" class="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm font-semibold">
-                        <i class="fa-solid fa-chevron-left"></i> 設定
-                    </button>
-                    <h3 class="text-base font-bold">デザイン比較</h3>
-                    <div class="w-12"></div>
-                </div>
-                <div class="w-full flex-1 overflow-y-auto custom-scrollbar flex flex-col gap-4 pt-2">
-                    <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 space-y-3">
-                        <h4 class="text-sm font-bold text-white">リザルト画面のデザイン選択</h4>
-                        <p class="text-xs text-gray-400 leading-relaxed">
-                            リザルト画面のUIスタイルを選択できます。
-                        </p>
-                        <div class="flex flex-col gap-2 pt-1">
-                            <button onclick="selectResultDesign('widget')" id="design-btn-widget" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-purple-500 text-left transition-all flex justify-between items-center">
-                                <div>
-                                    <div class="font-bold text-sm">標準（ウィジェット風）</div>
-                                    <div class="text-[10px] text-gray-400">カードとウィジェットで構成されたモダンなデザイン</div>
-                                </div>
-                                <i class="fa-solid fa-check text-purple-400" id="design-check-widget"></i>
-                            </button>
-                            <button onclick="selectResultDesign('mail')" id="design-btn-mail" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
-                                <div>
-                                    <div class="font-bold text-sm">メール風</div>
-                                    <div class="text-[10px] text-gray-400">人事部からの通知メール形式のデザイン</div>
-                                </div>
-                                <i class="fa-solid fa-check text-purple-400 hidden" id="design-check-mail"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- リザルト / ゲームオーバー画面 -->
-            <div id="clear-screen" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-b from-black/90 via-slate-950/90 to-black/95 backdrop-blur-lg z-40 text-white p-5 text-center overflow-y-auto no-scrollbar">
-                
-                <!-- 1. 標準（ウィジェット風）レイアウト -->
-                <div id="result-widget-layout" class="w-full flex flex-col items-center py-2 my-auto">
+            <!-- リザルト / ゲームオーバー画面（メール風に改修） -->
+            <div id="clear-screen" class="hidden absolute inset-0 flex flex-col bg-black/95 backdrop-blur-md z-40 text-white p-3 overflow-y-auto custom-scrollbar">
+                <div class="w-full max-w-[340px] mx-auto my-auto bg-zinc-900 border border-white/15 rounded-2xl p-4 shadow-2xl text-left text-xs space-y-3">
                     
-                    <!-- ヘッダーアイコン・演出 -->
-                    <div class="relative mb-2 flex items-center justify-center">
-                        <div class="absolute inset-0 bg-amber-500/20 blur-xl rounded-full"></div>
-                        <div class="relative w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center shadow-2xl backdrop-blur-md">
-                            <i id="end-icon" class="fa-solid fa-battery-empty text-4xl text-red-500 drop-shadow-md"></i>
-                        </div>
-                    </div>
-
-                    <h2 id="end-title" class="text-2xl font-black mb-1 tracking-tight drop-shadow">電源切れ</h2>
-                    <p id="end-desc" class="text-gray-300 text-[11px] mb-4 font-medium px-2 leading-relaxed">バッテリーが切れ、音信不通になりました...</p>
-                    
-                    <!-- ウィジェット（スコア表示 8:2比率） -->
-                    <div class="flex gap-2 w-full mb-3 items-stretch">
-                        <!-- 最終スコア（幅 約7割） -->
-                        <div class="flex-[7] bg-slate-900/80 backdrop-blur-md border border-amber-500/40 rounded-2xl p-3 flex items-center gap-2.5 shadow-lg relative overflow-hidden min-w-0">
-                           <i id="widget-weather-icon" class="fa-solid fa-star text-amber-400 text-2xl shrink-0"></i>
-                           <div class="flex flex-col text-left min-w-0 flex-1">
-                               <div class="flex items-center gap-1.5">
-                                   <span class="text-[9px] text-gray-400 font-semibold uppercase tracking-wider">最終スコア</span>
-                                   <span id="new-best-tag" class="hidden text-[9px] text-amber-400 font-bold">★自己ベスト更新！</span>
-                               </div>
-                               <span id="widget-weather-text" class="text-xl font-black text-amber-300 truncate tracking-tight">0 pts</span>
-                           </div>
-                        </div>
-                        <!-- スコアランク（幅 約3割） -->
-                        <div class="flex-[3] bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-2xl p-2 flex flex-col items-center justify-center shadow-lg shrink-0">
-                           <span class="text-[8px] text-gray-400 font-bold uppercase">RANK</span>
-                           <span id="widget-stock-text" class="text-base font-black text-amber-300 mt-0.5">-</span>
-                        </div>
-                    </div>
-
-                    <!-- リザルト成績サマリーパネル -->
-                    <div id="result-summary-card" class="w-full bg-slate-900/80 backdrop-blur-md border border-slate-700/60 rounded-2xl p-3 mb-3.5 shadow-2xl relative overflow-hidden">
-                        <div class="absolute -right-6 -top-6 w-20 h-20 bg-amber-500/10 rounded-full blur-lg pointer-events-none"></div>
-                        <div class="text-[11px] font-bold text-amber-300 border-b border-white/10 pb-2 mb-2.5 flex items-center justify-center gap-1.5 uppercase tracking-wider">
-                            <i class="fa-solid fa-clipboard-check text-amber-400"></i> 業務成績ウィジェット
-                        </div>
-                        <div class="grid grid-cols-2 gap-2 text-left">
-                            <div class="bg-black/40 rounded-xl p-2.5 border border-white/5 flex flex-col justify-between">
-                                <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
-                                    <i class="fa-solid fa-inbox text-[9px] text-amber-400"></i> 捌いた通知
-                                </span>
-                                <span id="res-cleared-count" class="font-black text-amber-400 text-base mt-0.5">0件</span>
-                            </div>
-                            <div class="bg-black/40 rounded-xl p-2.5 border border-white/5 flex flex-col justify-between">
-                                <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
-                                    <i class="fa-solid fa-clock text-[9px] text-blue-400"></i> 勤務時間
-                                </span>
-                                <span id="res-clear-time" class="font-bold text-white text-sm mt-0.5">0分00秒</span>
-                            </div>
-                            <div class="bg-black/40 rounded-xl p-2.5 border border-white/5 flex flex-col justify-between">
-                                <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
-                                    <i class="fa-solid fa-battery-half text-[9px] text-green-400"></i> 残充電
-                                </span>
-                                <span id="res-battery" class="font-bold text-green-400 text-sm mt-0.5">100%</span>
-                            </div>
-                            <div class="bg-black/40 rounded-xl p-2.5 border border-white/5 flex flex-col justify-between">
-                                <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
-                                    <i class="fa-solid fa-layer-group text-[9px] text-purple-400"></i> 難易度
-                                </span>
-                                <span id="res-difficulty" class="font-bold text-purple-300 text-xs mt-0.5 truncate">レギュラー</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- スコア送信エリア（パートの場合は非表示に制御） -->
-                    <div id="ranking-submit-container" class="w-full">
-                        <div id="ranking-submit-area" class="w-full bg-slate-900/80 backdrop-blur-md border border-blue-500/30 p-3 rounded-2xl mb-4 text-left shadow-xl relative overflow-hidden">
-                            <div class="absolute -right-4 -top-4 w-16 h-16 bg-blue-500/10 rounded-full blur-xl pointer-events-none"></div>
-                            
-                            <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-blue-300 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-cloud-arrow-up text-blue-400"></i> ランキングに登録する
-                                </span>
-                                <span class="text-[9px] text-gray-400 font-mono">最大10文字</span>
-                            </div>
-                            <div class="flex gap-2 items-center">
-                                <div class="relative flex-1">
-                                    <i class="fa-solid fa-user absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-500 text-[10px]"></i>
-                                    <input type="text" id="ranking-username-input" maxlength="10" placeholder="名前を入力" class="w-full bg-black/60 border border-blue-500/40 focus:border-blue-400 rounded-xl pl-7 pr-3 py-2 text-xs text-white focus:outline-none transition-all placeholder-gray-500 min-w-0">
-                                </div>
-                                <button id="ranking-submit-btn" onclick="submitRankingScore()" class="px-3.5 py-2 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 rounded-xl text-xs font-bold text-white shadow-md transition-all shrink-0 flex items-center justify-center gap-1 whitespace-nowrap border border-blue-400/50">
-                                    <i class="fa-solid fa-arrow-up-from-bracket"></i> 登録
-                                </button>
-                            </div>
-                            <p id="ranking-submit-msg" class="text-[10px] text-blue-300 mt-1.5 hidden text-center font-medium"></p>
-                        </div>
-                    </div>
-
-                    <!-- アクションボタン群 -->
-                    <div class="flex flex-col gap-2 w-full items-center">
-                        <button onclick="startGame()" class="w-full py-3 bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 hover:brightness-110 text-black font-black rounded-xl text-sm shadow-lg shadow-orange-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 tracking-wide">
-                            <i class="fa-solid fa-rotate-right"></i> もう一度遊ぶ
-                        </button>
-                        <div class="grid grid-cols-2 gap-2 w-full">
-                            <button onclick="openRankingModal()" id="result-ranking-btn" class="py-2.5 bg-white/5 hover:bg-white/10 border border-amber-400/30 text-amber-300 hover:text-amber-200 rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-trophy"></i> ランキング
-                            </button>
-                            <button onclick="backToTitle()" class="py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-gray-300 hover:text-white rounded-xl font-bold text-xs transition-all flex items-center justify-center gap-1.5">
-                                <i class="fa-solid fa-house"></i> タイトル
-                            </button>
-                        </div>
-                    </div>
-
-                </div>
-
-                <!-- 2. メール風レイアウト -->
-                <div id="result-mail-layout" class="hidden w-full flex flex-col text-left py-2 my-auto bg-zinc-900/95 border border-white/15 rounded-2xl p-4 shadow-2xl backdrop-blur-md">
                     <!-- メールヘッダー -->
-                    <div class="flex items-center justify-between border-b border-white/10 pb-3 mb-3">
+                    <div class="flex items-start justify-between border-b border-zinc-800 pb-3">
                         <div class="flex items-center gap-2.5">
-                            <div class="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center text-white text-xs font-bold border border-white/20 shadow">
+                            <div class="w-9 h-9 rounded-full bg-zinc-700 flex items-center justify-center font-bold text-white text-xs shrink-0 shadow">
                                 人事
                             </div>
                             <div>
-                                <div class="text-xs font-bold text-white">人事部</div>
+                                <div class="font-bold text-sm text-white">人事部</div>
                                 <div class="text-[10px] text-gray-400">宛先: あなた</div>
                             </div>
                         </div>
-                        <span class="text-[10px] text-gray-400">18:51</span>
+                        <div id="result-email-time" class="text-xs text-gray-400 font-mono">18:51</div>
                     </div>
 
-                    <!-- メール本文 -->
-                    <div class="text-xs text-gray-200 space-y-3 leading-relaxed overflow-y-auto custom-scrollbar pr-1">
-                        <div>
-                            <div class="text-sm font-bold text-white mb-1">重要なお知らせ</div>
-                            <p class="text-[11px] text-gray-300">今回の勤務実績についてお知らせいたします。</p>
-                        </div>
+                    <!-- メインタイトル・説明 -->
+                    <div class="space-y-1">
+                        <div class="text-base font-bold text-white">重要なお知らせ</div>
+                        <div class="text-[11px] text-gray-300">今回の勤務実績についてお知らせいたします。</div>
+                    </div>
 
-                        <div class="bg-black/40 rounded-xl p-3 border border-white/10 space-y-1">
-                            <div class="font-bold text-white flex justify-between">
-                                <span>ステータス:</span>
-                                <span id="mail-res-status" class="text-amber-400">MISSION CLEAR</span>
-                            </div>
-                            <div class="font-bold text-white flex justify-between">
-                                <span>ランク:</span>
-                                <span id="mail-res-rank" class="text-amber-300">C</span>
-                            </div>
-                            <div class="font-bold text-white flex justify-between">
-                                <span>スコア:</span>
-                                <span id="mail-res-score" class="text-amber-300">0 pts</span>
-                            </div>
+                    <!-- 実績概要パネル（ステータス・ランク・スコア） -->
+                    <div class="bg-black/60 rounded-xl p-3 border border-white/10 space-y-2">
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">ステータス:</span>
+                            <span id="end-title" class="font-bold text-amber-400">MISSION CLEAR</span>
                         </div>
-
-                        <div class="text-gray-500 tracking-widest text-[10px] my-1">
-                            ------------------------
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">ランク:</span>
+                            <span id="widget-stock-text" class="font-bold text-amber-300">-</span>
                         </div>
-                        
-                        <div>
-                            <div class="font-bold text-amber-300 mb-1.5 flex items-center gap-1">
-                                ■実績詳細
-                            </div>
-                            <div class="pl-2 space-y-1.5 text-[11px]">
-                                <div><strong>【捌いた通知】</strong><br><span id="mail-res-cleared">0件</span></div>
-                                <div><strong>【勤務時間】</strong><br><span id="mail-res-time">0分00秒</span></div>
-                                <div><strong>【残充電】</strong><br><span id="mail-res-battery">100%</span></div>
-                                <div><strong>【難易度】</strong><br><span id="mail-res-diff">レギュラー</span></div>
-                            </div>
-                        </div>
-
-                        <div class="text-gray-500 tracking-widest text-[10px] my-2">
-                            ------------------------
-                        </div>
-
-                        <!-- ランキング登録（メール内リンク・入力） -->
-                        <div id="mail-ranking-container" class="space-y-1.5">
-                            <div class="text-blue-400 font-bold text-[11px]">▽ランキング登録はこちら▽</div>
-                            <div class="flex gap-2 items-center">
-                                <input type="text" id="mail-ranking-username-input" maxlength="10" placeholder="名前を入力(10文字)" class="flex-1 bg-black/60 border border-blue-500/40 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-blue-400">
-                                <button id="mail-ranking-submit-btn" onclick="submitRankingScore()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold text-white transition-all whitespace-nowrap">
-                                    登録する
-                                </button>
-                            </div>
-                            <p id="mail-ranking-submit-msg" class="text-[10px] text-blue-300 hidden font-medium text-center"></p>
-                        </div>
-
-                            <div>
-                                <div class="text-blue-400 font-bold text-[11px] mb-0.5">▽もう一度遊ぶ方はこちら▽</div>
-                                <button onclick="startGame()" class="text-blue-300 hover:text-blue-200 underline text-xs font-semibold text-left">
-                                    もう一度遊ぶ
-                                </button>
-                            </div>
-                            <div>
-                                <div class="text-blue-400 font-bold text-[11px] mb-0.5">▽ランキングを見る方はこちら▽</div>
-                                <button onclick="openRankingModal()" class="text-blue-300 hover:text-blue-200 underline text-xs font-semibold text-left">
-                                    ランキングを見る
-                                </button>
-                            </div>
-                            <div>
-                                <div class="text-blue-400 font-bold text-[11px] mb-0.5">▽タイトル画面に戻る方はこちら▽</div>
-                                <button onclick="backToTitle()" class="text-blue-300 hover:text-blue-200 underline text-xs font-semibold text-left">
-                                    タイトル画面に戻る
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="text-gray-500 tracking-widest text-[10px] pt-1">
-                            ------------------------
+                        <div class="flex justify-between items-center">
+                            <span class="text-gray-400">スコア:</span>
+                            <span id="widget-weather-text" class="font-bold text-amber-300">0 pts</span>
                         </div>
                     </div>
+
+                    <div class="border-t border-dashed border-zinc-700 my-2"></div>
+
+                    <!-- 実績詳細 -->
+                    <div class="space-y-1.5">
+                        <div class="font-bold text-amber-400">■実績詳細</div>
+                        <div class="pl-1 space-y-1 text-gray-300">
+                            <div>【捌いた通知】 <span id="res-cleared-count" class="text-white font-bold">0件</span></div>
+                            <div>【勤務時間】 <span id="res-clear-time" class="text-white font-bold">0分00秒</span></div>
+                            <div>【残充電】 <span id="res-battery" class="text-white font-bold">100%</span></div>
+                            <div>【難易度】 <span id="res-difficulty" class="text-white font-bold">レギュラー</span></div>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-dashed border-zinc-700 my-2"></div>
+
+                    <!-- スコア送信エリア（パートの場合は非表示に制御） -->
+                    <div id="ranking-submit-container" class="space-y-1.5">
+                        <div class="text-blue-400 font-bold">▽ランキング登録はこちら▽</div>
+                        <div id="ranking-submit-area" class="flex gap-2 items-center">
+                            <input type="text" id="ranking-username-input" maxlength="10" placeholder="名前を入力(10文字)" class="flex-1 bg-black/80 border border-blue-500/40 focus:border-blue-400 rounded-xl px-3 py-2 text-xs text-white focus:outline-none transition-all placeholder-gray-500 min-w-0">
+                            <button id="ranking-submit-btn" onclick="submitRankingScore()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 active:scale-95 rounded-xl text-xs font-bold text-white shadow transition-all shrink-0">
+                                登録する
+                            </button>
+                        </div>
+                        <p id="ranking-submit-msg" class="text-[10px] text-blue-300 mt-1.5 hidden font-medium"></p>
+                    </div>
+
+                    <!-- アクションリンク群 -->
+                    <div class="space-y-3 pt-1">
+                        <div class="space-y-1">
+                            <div class="text-blue-400 font-bold">▽もう一度遊ぶ方はこちら▽</div>
+                            <button onclick="startGame()" class="text-blue-300 hover:text-blue-200 underline text-left font-semibold block">
+                                もう一度遊ぶ
+                            </button>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="text-blue-400 font-bold">▽ランキングを見る方はこちら▽</div>
+                            <button onclick="openRankingModal()" id="result-ranking-btn" class="text-blue-300 hover:text-blue-200 underline text-left font-semibold block">
+                                ランキングを見る
+                            </button>
+                        </div>
+
+                        <div class="space-y-1">
+                            <div class="text-blue-400 font-bold">▽タイトル画面に戻る方はこちら▽</div>
+                            <button onclick="backToTitle()" class="text-blue-300 hover:text-blue-200 underline text-left font-semibold block">
+                                タイトル画面に戻る
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="border-t border-dashed border-zinc-700 mt-3 pt-1"></div>
+
                 </div>
-
             </div>
 
             <!-- 全画面共通：ランキングモーダル -->
