@@ -21,6 +21,9 @@ let lastGameResult = null; // スコア送信用の最終リザルト情報
 let isScoreSubmitted = false; // 今回のスコアが送信済みかどうかのフラグ
 let toastTimeoutId = null; // トースト通知のタイマー管理用
 
+// リザルト画面デザイン設定（'widget' または 'mail'）
+let currentResultDesign = 'widget';
+
 // -----------------------
 // 画面制御ロジック
 // -----------------------
@@ -102,6 +105,38 @@ function updateDifficultyModalUI() {
     });
 }
 
+// リザルト画面デザイン選択ロジック
+function selectResultDesign(design) {
+    currentResultDesign = design;
+    const widgetBtn = document.getElementById('design-btn-widget');
+    const mailBtn = document.getElementById('design-btn-mail');
+    const widgetCheck = document.getElementById('design-check-widget');
+    const mailCheck = document.getElementById('design-check-mail');
+    const settingsDesignDisplay = document.getElementById('settings-design-display');
+
+    if (design === 'widget') {
+        widgetBtn.classList.add('border-purple-500', 'bg-white/20');
+        widgetBtn.classList.remove('border-white/10', 'bg-white/10');
+        widgetCheck.classList.remove('hidden');
+        
+        mailBtn.classList.remove('border-purple-500', 'bg-white/20');
+        mailBtn.classList.add('border-white/10', 'bg-white/10');
+        mailCheck.classList.add('hidden');
+
+        if (settingsDesignDisplay) settingsDesignDisplay.textContent = '標準（ウィジェット風）';
+    } else {
+        mailBtn.classList.add('border-purple-500', 'bg-white/20');
+        mailBtn.classList.remove('border-white/10', 'bg-white/10');
+        mailCheck.classList.remove('hidden');
+        
+        widgetBtn.classList.remove('border-purple-500', 'bg-white/20');
+        widgetBtn.classList.add('border-white/10', 'bg-white/10');
+        widgetCheck.classList.add('hidden');
+
+        if (settingsDesignDisplay) settingsDesignDisplay.textContent = 'メール風';
+    }
+}
+
 // 設定サブ画面の開閉制御
 function openSettingsSubScreen(subName) {
     const subEl = document.getElementById(`settings-sub-${subName}`);
@@ -133,6 +168,10 @@ function saveUsername() {
     const rankingInput = document.getElementById('ranking-username-input');
     if (rankingInput) {
         rankingInput.value = savedUserName;
+    }
+    const mailRankingInput = document.getElementById('mail-ranking-username-input');
+    if (mailRankingInput) {
+        mailRankingInput.value = savedUserName;
     }
     
     msg.classList.remove('hidden');
@@ -804,6 +843,10 @@ function prepareResultData(isClear = true) {
     if (rankingInput) {
         rankingInput.value = savedUserName || "";
     }
+    const mailRankingInput = document.getElementById('mail-ranking-username-input');
+    if (mailRankingInput) {
+        mailRankingInput.value = savedUserName || "";
+    }
 
     // パート（5件）の場合はランキング登録エリアを非表示にする
     const submitContainer = document.getElementById('ranking-submit-container');
@@ -814,6 +857,14 @@ function prepareResultData(isClear = true) {
             submitContainer.classList.remove('hidden');
         }
     }
+    const mailSubmitContainer = document.getElementById('mail-ranking-container');
+    if (mailSubmitContainer) {
+        if (targetClearCount === 5) {
+            mailSubmitContainer.classList.add('hidden');
+        } else {
+            mailSubmitContainer.classList.remove('hidden');
+        }
+    }
 
     resetResultSubmitState();
     updateResultSummaryCard();
@@ -822,38 +873,66 @@ function prepareResultData(isClear = true) {
 function resetResultSubmitState() {
     isScoreSubmitted = false;
     
-    const nameInput = document.getElementById('ranking-username-input');
-    if (nameInput) {
-        nameInput.disabled = false;
-        nameInput.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-black/80');
-    }
+    const nameInputs = [document.getElementById('ranking-username-input'), document.getElementById('mail-ranking-username-input')];
+    nameInputs.forEach(input => {
+        if (input) {
+            input.disabled = false;
+            input.classList.remove('opacity-50', 'cursor-not-allowed', 'bg-black/80');
+        }
+    });
 
-    const btn = document.getElementById('ranking-submit-btn');
-    if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-arrow-up-from-bracket"></i> 登録';
-        btn.className = 'px-3.5 py-2 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 rounded-xl text-xs font-bold text-white shadow-md transition-all shrink-0 flex items-center justify-center gap-1 whitespace-nowrap border border-blue-400/50';
-    }
-    const msgEl = document.getElementById('ranking-submit-msg');
-    if (msgEl) {
-        msgEl.classList.add('hidden');
-        msgEl.textContent = '';
-    }
+    const btns = [document.getElementById('ranking-submit-btn'), document.getElementById('mail-ranking-submit-btn')];
+    btns.forEach((btn, idx) => {
+        if (btn) {
+            btn.disabled = false;
+            if (idx === 0) {
+                btn.innerHTML = '<i class="fa-solid fa-arrow-up-from-bracket"></i> 登録';
+                btn.className = 'px-3.5 py-2 bg-gradient-to-b from-blue-500 to-blue-600 hover:from-blue-400 hover:to-blue-500 active:scale-95 rounded-xl text-xs font-bold text-white shadow-md transition-all shrink-0 flex items-center justify-center gap-1 whitespace-nowrap border border-blue-400/50';
+            } else {
+                btn.innerHTML = '登録する';
+                btn.className = 'px-3 py-1.5 bg-blue-600 hover:bg-blue-500 rounded-lg text-xs font-bold text-white transition-all whitespace-nowrap';
+            }
+        }
+    });
+
+    const msgEls = [document.getElementById('ranking-submit-msg'), document.getElementById('mail-ranking-submit-msg')];
+    msgEls.forEach(msgEl => {
+        if (msgEl) {
+            msgEl.classList.add('hidden');
+            msgEl.textContent = '';
+        }
+    });
 }
 
 function updateResultSummaryCard() {
     if (!lastGameResult) return;
 
+    const count = (typeof lastGameResult.clearedCount === 'number') ? lastGameResult.clearedCount : clearedNotificationsCount;
+    const timeStr = lastGameResult.clearTimeStr;
+    const batteryStr = `${lastGameResult.endBattery}%`;
+    const diffStr = getDifficultyText(parseInt(lastGameResult.difficulty, 10));
+
+    // ウィジェット風の更新
     const clearedEl = document.getElementById('res-cleared-count');
     const timeEl = document.getElementById('res-clear-time');
     const batteryEl = document.getElementById('res-battery');
     const diffEl = document.getElementById('res-difficulty');
 
-    const count = (typeof lastGameResult.clearedCount === 'number') ? lastGameResult.clearedCount : clearedNotificationsCount;
     if (clearedEl) clearedEl.textContent = `${count}件`;
-    if (timeEl) timeEl.textContent = lastGameResult.clearTimeStr;
-    if (batteryEl) batteryEl.textContent = `${lastGameResult.endBattery}%`;
-    if (diffEl) diffEl.textContent = getDifficultyText(parseInt(lastGameResult.difficulty, 10));
+    if (timeEl) timeEl.textContent = timeStr;
+    if (batteryEl) batteryEl.textContent = batteryStr;
+    if (diffEl) diffEl.textContent = diffStr;
+
+    // メール風の更新
+    const mailClearedEl = document.getElementById('mail-res-cleared');
+    const mailTimeEl = document.getElementById('mail-res-time');
+    const mailBatteryEl = document.getElementById('mail-res-battery');
+    const mailDiffEl = document.getElementById('mail-res-diff');
+
+    if (mailClearedEl) mailClearedEl.textContent = `${count}件`;
+    if (mailTimeEl) mailTimeEl.textContent = timeStr;
+    if (mailBatteryEl) mailBatteryEl.textContent = batteryStr;
+    if (mailDiffEl) mailDiffEl.textContent = diffStr;
 }
 
 function updateDummyWidgets(isClear) {
@@ -907,6 +986,28 @@ function updateDummyWidgets(isClear) {
         stockText.textContent = rank;
         stockText.className = `text-base font-black ${rankColor}`;
     }
+
+    // メール風側のスコア・ランク表示も同期
+    const mailResScore = document.getElementById('mail-res-score');
+    const mailResRank = document.getElementById('mail-res-rank');
+    if (mailResScore) mailResScore.textContent = `${score.toLocaleString()} pts`;
+    if (mailResRank) {
+        mailResRank.textContent = rank;
+        mailResRank.className = `font-bold ${rankColor}`;
+    }
+}
+
+function applyResultDesignLayout() {
+    const widgetLayout = document.getElementById('result-widget-layout');
+    const mailLayout = document.getElementById('result-mail-layout');
+
+    if (currentResultDesign === 'mail') {
+        if (widgetLayout) widgetLayout.classList.add('hidden');
+        if (mailLayout) mailLayout.classList.remove('hidden');
+    } else {
+        if (widgetLayout) widgetLayout.classList.remove('hidden');
+        if (mailLayout) mailLayout.classList.add('hidden');
+    }
 }
 
 function showGameOverScreen(reason = 'battery') {
@@ -915,20 +1016,30 @@ function showGameOverScreen(reason = 'battery') {
 
     prepareResultData(false);
     updateDummyWidgets(false);
+    applyResultDesignLayout();
 
     const clearScreen = document.getElementById('clear-screen');
     const icon = document.getElementById('end-icon');
     const title = document.getElementById('end-title');
     const desc = document.getElementById('end-desc');
+    const mailStatus = document.getElementById('mail-res-status');
 
     if (reason === 'battery') {
-        icon.className = 'fa-solid fa-battery-empty text-4xl text-red-500 drop-shadow-md';
-        title.textContent = '電源切れ';
-        desc.textContent = 'バッテリーが切れ、音信不通になりました...';
+        if (icon) icon.className = 'fa-solid fa-battery-empty text-4xl text-red-500 drop-shadow-md';
+        if (title) title.textContent = '電源切れ';
+        if (desc) desc.textContent = 'バッテリーが切れ、音信不通になりました...';
+        if (mailStatus) {
+            mailStatus.textContent = '電源切れ (GAME OVER)';
+            mailStatus.className = 'text-red-400';
+        }
     } else if (reason === 'overflow') {
-        icon.className = 'fa-solid fa-dumpster-fire text-4xl text-yellow-500 drop-shadow-md';
-        title.textContent = '処理落ち';
-        desc.textContent = '通知が溜まりすぎて熱暴走しました...';
+        if (icon) icon.className = 'fa-solid fa-dumpster-fire text-4xl text-yellow-500 drop-shadow-md';
+        if (title) title.textContent = '処理落ち';
+        if (desc) desc.textContent = '通知が溜まりすぎて熱暴走しました...';
+        if (mailStatus) {
+            mailStatus.textContent = '処理落ち (GAME OVER)';
+            mailStatus.className = 'text-yellow-400';
+        }
     }
 
     clearScreen.classList.remove('hidden');
@@ -940,14 +1051,24 @@ function showClearScreen() {
 
     prepareResultData(true);
     updateDummyWidgets(true);
+    applyResultDesignLayout();
 
     document.querySelector('.phone-frame').classList.add('clear-bg');
     document.getElementById('date-display').textContent = 'MISSION CLEAR';
 
     document.getElementById('clear-screen').classList.remove('hidden');
-    document.getElementById('end-icon').className = 'fa-solid fa-trophy text-4xl text-amber-400 drop-shadow-md';
-    document.getElementById('end-title').textContent = 'MISSION CLEAR!';
-    document.getElementById('end-desc').textContent = 'すべての業務通知を完璧に捌き切りました！';
+    const endIcon = document.getElementById('end-icon');
+    const endTitle = document.getElementById('end-title');
+    const endDesc = document.getElementById('end-desc');
+    const mailStatus = document.getElementById('mail-res-status');
+
+    if (endIcon) endIcon.className = 'fa-solid fa-trophy text-4xl text-amber-400 drop-shadow-md';
+    if (endTitle) endTitle.textContent = 'MISSION CLEAR!';
+    if (endDesc) endDesc.textContent = 'すべての業務通知を完璧に捌き切りました！';
+    if (mailStatus) {
+        mailStatus.textContent = 'MISSION CLEAR';
+        mailStatus.className = 'text-amber-400';
+    }
 }
 
 function openRankingModal(diff) {
@@ -1075,23 +1196,31 @@ async function generateSignature(data) {
 async function submitRankingScore() {
     if (isScoreSubmitted) return;
 
-    const nameInput = document.getElementById('ranking-username-input');
-    const msgEl = document.getElementById('ranking-submit-msg');
-    const btn = document.getElementById('ranking-submit-btn');
+    // 現在アクティブな方の入力欄・メッセージ・ボタンを取得
+    const isMail = currentResultDesign === 'mail';
+    const nameInput = document.getElementById(isMail ? 'mail-ranking-username-input' : 'ranking-username-input');
+    const msgEl = document.getElementById(isMail ? 'mail-ranking-submit-msg' : 'ranking-submit-msg');
+    const btn = document.getElementById(isMail ? 'mail-ranking-submit-btn' : 'ranking-submit-btn');
+    
+    if (!nameInput) return;
     const name = nameInput.value.trim().substring(0, 10);
 
     if (!name) {
-        msgEl.textContent = '名前を入力してください (10文字以内)';
-        msgEl.className = 'text-[10px] text-red-400 mt-1.5 text-center font-medium';
-        msgEl.classList.remove('hidden');
+        if (msgEl) {
+            msgEl.textContent = '名前を入力してください (10文字以内)';
+            msgEl.className = 'text-[10px] text-red-400 mt-1.5 text-center font-medium';
+            msgEl.classList.remove('hidden');
+        }
         return;
     }
 
     if (!lastGameResult) return;
 
-    msgEl.textContent = '登録中...';
-    msgEl.className = 'text-[10px] text-blue-300 mt-1.5 text-center font-medium';
-    msgEl.classList.remove('hidden');
+    if (msgEl) {
+        msgEl.textContent = '登録中...';
+        msgEl.className = 'text-[10px] text-blue-300 mt-1.5 text-center font-medium';
+        msgEl.classList.remove('hidden');
+    }
 
     try {
         const payload = {
@@ -1118,18 +1247,35 @@ async function submitRankingScore() {
         if (settingsDisplay) settingsDisplay.textContent = name;
 
         isScoreSubmitted = true;
-        if (nameInput) {
-            nameInput.disabled = true;
-            nameInput.classList.add('opacity-50', 'cursor-not-allowed', 'bg-black/80');
-        }
-        if (btn) {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> 登録済';
-            btn.className = 'px-3 py-1.5 bg-gray-600/80 text-gray-300 cursor-not-allowed rounded-xl text-xs font-bold transition-all shrink-0 flex items-center justify-center gap-1 opacity-80 whitespace-nowrap border border-gray-500/30';
-        }
+        
+        // 両方の入力欄を同期してロック
+        const nameInputs = [document.getElementById('ranking-username-input'), document.getElementById('mail-ranking-username-input')];
+        nameInputs.forEach(inp => {
+            if (inp) {
+                inp.value = name;
+                inp.disabled = true;
+                inp.classList.add('opacity-50', 'cursor-not-allowed', 'bg-black/80');
+            }
+        });
 
-        msgEl.textContent = '登録が完了しました！';
-        msgEl.className = 'text-[10px] text-green-400 mt-1.5 text-center font-medium';
+        const btns = [document.getElementById('ranking-submit-btn'), document.getElementById('mail-ranking-submit-btn')];
+        btns.forEach((b, idx) => {
+            if (b) {
+                b.disabled = true;
+                if (idx === 0) {
+                    b.innerHTML = '<i class="fa-solid fa-check"></i> 登録済';
+                    b.className = 'px-3 py-1.5 bg-gray-600/80 text-gray-300 cursor-not-allowed rounded-xl text-xs font-bold transition-all shrink-0 flex items-center justify-center gap-1 opacity-80 whitespace-nowrap border border-gray-500/30';
+                } else {
+                    b.innerHTML = '登録済';
+                    b.className = 'px-3 py-1.5 bg-gray-600/80 text-gray-300 cursor-not-allowed rounded-lg text-xs font-bold transition-all whitespace-nowrap opacity-80';
+                }
+            }
+        });
+
+        if (msgEl) {
+            msgEl.textContent = '登録が完了しました！';
+            msgEl.className = 'text-[10px] text-green-400 mt-1.5 text-center font-medium';
+        }
 
         setTimeout(() => {
             if (msgEl) msgEl.classList.add('hidden');
@@ -1141,8 +1287,10 @@ async function submitRankingScore() {
 
     } catch (err) {
         console.error(err);
-        msgEl.textContent = '登録に失敗しました';
-        msgEl.className = 'text-[10px] text-red-400 mt-1.5 text-center font-medium';
+        if (msgEl) {
+            msgEl.textContent = '登録に失敗しました';
+            msgEl.className = 'text-[10px] text-red-400 mt-1.5 text-center font-medium';
+        }
     }
 }
 
