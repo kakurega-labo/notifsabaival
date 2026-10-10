@@ -32,14 +32,24 @@
                 </div>
             </div>
 
-            <div class="flex flex-col items-center mt-12 text-white">
+            <div class="flex flex-col items-center mt-10 text-white">
                 <div id="date-display" class="text-lg font-medium mb-1 drop-shadow-md">1月1日 (月)</div>
-                <div id="time-display" class="text-[5.5rem] leading-none clock-font drop-shadow-lg tracking-tight">
+                <div id="time-display" class="text-[5rem] leading-none clock-font drop-shadow-lg tracking-tight">
                     0:00
+                </div>
+                <!-- 【追加】制限時間プログレスバー -->
+                <div id="time-limit-container" class="w-44 mt-3 hidden">
+                    <div class="flex justify-between text-[10px] font-bold mb-1 text-amber-300">
+                        <span>TIME LIMIT</span>
+                        <span id="time-limit-text">50s</span>
+                    </div>
+                    <div class="w-full bg-white/20 rounded-full h-1.5 overflow-hidden">
+                        <div id="time-limit-bar" class="bg-amber-400 h-full w-full transition-all duration-300"></div>
+                    </div>
                 </div>
             </div>
 
-            <div id="notification-container" class="flex-1 w-full mt-6 flex flex-col gap-3 overflow-y-auto no-scrollbar pb-32">
+            <div id="notification-container" class="flex-1 w-full mt-4 flex flex-col gap-3 overflow-y-auto no-scrollbar pb-32">
                 <!-- JavaScriptでここに通知が生成されます -->
             </div>
 
@@ -53,7 +63,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="flex flex-col items-center gap-2 pb-8 w-full mx-auto">
+                <div class="flex flex-col items-center gap-2 pb-8 w-full max-w-[200px] mx-auto">
                     <button onclick="openDifficultyModal()" class="px-6 py-2 bg-purple-600/80 hover:bg-purple-500 rounded-full font-bold transition-colors w-full flex items-center justify-center gap-2">
                         <i class="fa-solid fa-layer-group"></i> 難易度選択
                     </button>
@@ -68,7 +78,7 @@
 
             <!-- 難易度選択ポップアップ（タイトル画面用） -->
             <div id="difficulty-modal" class="hidden absolute inset-0 flex items-center justify-center bg-black/80 backdrop-blur-md z-[60] p-6">
-                <div class="bg-zinc-900 border border-white/15 rounded-2xl w-full max-w-[300px] p-5 text-white shadow-2xl">
+                <div class="bg-zinc-900 border border-white/15 rounded-2xl w-full p-5 text-white shadow-2xl">
                     <h3 class="text-lg font-bold mb-3 text-center flex items-center justify-center gap-2">
                         <i class="fa-solid fa-layer-group text-purple-400"></i> 難易度選択
                     </h3>
@@ -77,28 +87,28 @@
                     <div class="flex flex-col gap-2 mb-4">
                         <button onclick="selectDifficulty('5')" id="diff-btn-5" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-sm">パート (5件)</div>
+                                <div class="font-bold text-sm">パート (5件) <span class="text-[10px] text-amber-300 ml-1">制限 35秒</span></div>
                                 <div class="text-[10px] text-gray-400">ランキング対象外・初心者向け</div>
                             </div>
                             <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-5"></i>
                         </button>
                         <button onclick="selectDifficulty('10')" id="diff-btn-10" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-sm">レギュラー (10件)</div>
+                                <div class="font-bold text-sm">レギュラー (10件) <span class="text-[10px] text-amber-300 ml-1">制限 55秒</span></div>
                                 <div class="text-[10px] text-gray-400">標準的な難易度</div>
                             </div>
                             <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-10"></i>
                         </button>
                         <button onclick="selectDifficulty('20')" id="diff-btn-20" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-sm">フルタイム (20件)</div>
+                                <div class="font-bold text-sm">フルタイム (20件) <span class="text-[10px] text-amber-300 ml-1">制限 90秒</span></div>
                                 <div class="text-[10px] text-gray-400">歯ごたえのある長丁場</div>
                             </div>
                             <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-20"></i>
                         </button>
                         <button onclick="selectDifficulty('30')" id="diff-btn-30" class="p-3 rounded-xl bg-white/10 hover:bg-white/15 border border-white/10 text-left transition-all flex justify-between items-center">
                             <div>
-                                <div class="font-bold text-sm">オーバータイム (30件)</div>
+                                <div class="font-bold text-sm">オーバータイム (30件) <span class="text-[10px] text-amber-300 ml-1">制限 120秒</span></div>
                                 <div class="text-[10px] text-gray-400">極限の耐久タスク</div>
                             </div>
                             <i class="fa-solid fa-check text-purple-400 hidden" id="diff-check-30"></i>
@@ -254,13 +264,13 @@
                     <div class="bg-zinc-900 rounded-2xl p-4 border border-white/10 text-xs space-y-3 leading-relaxed">
                         <div>
                             <strong class="text-white text-sm block mb-1">クリア条件</strong>
-                            <p class="text-gray-300">設定した通知ノルマ以上の通知を処理し、画面上の通知を0件にすることです。</p>
+                            <p class="text-gray-300">制限時間内に指定された通知ノルマを処理し、画面上の通知を0件にすることです。</p>
                         </div>
                         <div class="border-t border-white/10 pt-2">
                             <strong class="text-white text-sm block mb-1">ゲームオーバー条件</strong>
                             <ul class="list-disc list-inside text-gray-300 space-y-1">
                                 <li><strong>電源切れ：</strong>バッテリー残量が0%になる</li>
-                                <li><strong>処理落ち：</strong>通知が画面に50件溜まる</li>
+                                <li><strong>タイムアップ：</strong>制限時間が0秒になる</li>
                             </ul>
                         </div>
                         <div class="border-t border-white/10 pt-2">
@@ -317,7 +327,7 @@
                 </div>
             </div>
 
-            <!-- リザルト / ゲームオーバー画面（メール風に改修） -->
+            <!-- リザルト / ゲームオーバー画面（メール風） -->
             <div id="clear-screen" class="hidden absolute inset-0 flex flex-col bg-black/95 backdrop-blur-md z-40 text-white p-3 overflow-y-auto custom-scrollbar">
                 <div class="w-full max-w-[340px] mx-auto my-auto bg-zinc-900 border border-white/15 rounded-2xl p-4 shadow-2xl text-left text-xs space-y-3">
                     
@@ -332,7 +342,7 @@
                                 <div class="text-[10px] text-gray-400">宛先: あなた</div>
                             </div>
                         </div>
-                        <div id="result-email-time" class="text-xs text-gray-400 font-mono">18:51</div>
+                        <div id="result-email-time" class="text-xs text-gray-400 font-mono">00:00</div>
                     </div>
 
                     <!-- メインタイトル・説明 -->
@@ -357,7 +367,7 @@
                         </div>
                     </div>
 
-                    <div class="border-t border-dashed border-zinc-700 my-2"></div>
+                    <div class="border-t border-dashed border-white my-2"></div>
 
                     <!-- 実績詳細 -->
                     <div class="space-y-1.5">
@@ -370,9 +380,9 @@
                         </div>
                     </div>
 
-                    <div class="border-t border-dashed border-zinc-700 my-2"></div>
+                    <div class="border-t border-dashed border-white my-2"></div>
 
-                    <!-- スコア送信エリア（パートの場合は非表示に制御） -->
+                    <!-- スコア送信エリア -->
                     <div id="ranking-submit-container" class="space-y-1.5">
                         <div class="text-blue-400 font-bold">▽ランキング登録はこちら▽</div>
                         <div id="ranking-submit-area" class="flex gap-2 items-center">
@@ -385,7 +395,7 @@
                     </div>
 
                     <!-- アクションリンク群 -->
-                    <div class="space-y-3 pt-1">
+                    <div class="space-y-3 pt-1 pb-1">
                         <div class="space-y-1">
                             <div class="text-blue-400 font-bold">▽もう一度遊ぶ方はこちら▽</div>
                             <button onclick="startGame()" class="text-blue-300 hover:text-blue-200 underline text-left font-semibold block">
@@ -394,21 +404,19 @@
                         </div>
 
                         <div class="space-y-1">
-                            <div class="text-blue-400 font-bold">▽ランキングを見る方はこちら▽</div>
+                            <div class="text-blue-400 font-bold">▽ランキングはこちら▽</div>
                             <button onclick="openRankingModal()" id="result-ranking-btn" class="text-blue-300 hover:text-blue-200 underline text-left font-semibold block">
                                 ランキングを見る
                             </button>
                         </div>
 
                         <div class="space-y-1">
-                            <div class="text-blue-400 font-bold">▽タイトル画面に戻る方はこちら▽</div>
+                            <div class="text-blue-400 font-bold">▽タイトル画面はこちら▽</div>
                             <button onclick="backToTitle()" class="text-blue-300 hover:text-blue-200 underline text-left font-semibold block">
                                 タイトル画面に戻る
                             </button>
                         </div>
                     </div>
-
-                    <div class="border-t border-dashed border-zinc-700 mt-3 pt-1"></div>
 
                 </div>
             </div>
@@ -424,7 +432,7 @@
                     </button>
                 </div>
 
-                <!-- 難易度切り替えタブ（パート除外、3段階に変更） -->
+                <!-- 難易度切り替えタブ -->
                 <div class="flex bg-white/10 rounded-lg p-1 mb-3 text-xs">
                     <button onclick="switchRankingTab('10')" id="tab-diff-10" class="flex-1 py-1.5 rounded-md font-bold transition-all bg-amber-500 text-black">
                         レギュラー (10)
